@@ -87,7 +87,7 @@ export const PROJECTS = [
     image: project4,
     description: `Developed a personal portfolio website using ReactJS, showcasing projects, skills, and experiences. Integrated animations and styled the site with Tailwind CSS for a modern and responsive design.`,
     technologies: ["ReactJS", "TailwindCSS", "JavaScript","React Animations"],
-    github: "",
+    github: "https://github.com/praveen-raj-m/mysite",
   },
 ];
 
