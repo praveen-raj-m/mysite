@@ -1,6 +1,4 @@
 
-
-
 import React, { useEffect, useState } from "react";
 import { ABOUT_TEXT, QUOTES } from "../constants"; 
 import { motion } from "framer-motion";
@@ -47,18 +45,18 @@ const About = () => {
         animate="visible"
         className="text-center my-20"
       >
-       <div className="h-48 lg:h-60 flex items-center justify-center">
+       <div className="h-48 lg:h-60 flex justify-center">
         <motion.div
           key={currentQuoteIndex} 
           variants={quoteAnimation}
           initial="initial"
           animate={isVisible ? "enter" : "exit"}
         >
-          <p className="text-2xl lg:text-4xl text-white  italic">
+          <p className="text-2xl lg:text-4xl  items-center text-white  italic">
             {QUOTES[currentQuoteIndex].quote}
           </p>
-          <p className="text-end mr-20 mt-10">
-            <span className="text-neutral-500 text-end text-lg lg:text-2xl italic">
+          <p className="text-end lg:mr-20 mt-10">
+            <span className="text-neutral-500 text-right text-lg lg:text-2xl italic">
               - {QUOTES[currentQuoteIndex].author}, {QUOTES[currentQuoteIndex].specialty}
             </span>
           </p>
