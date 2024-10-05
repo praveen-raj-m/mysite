@@ -31,11 +31,11 @@ const Hero = () => {
           </div>
 
           <div className="flex flex-col items-start ">
-            <motion.span
+          <motion.span
   variants={container(0)}
   initial="hidden"
   animate="visible"
-  className="bg-gradient-to-r from-blue-200 via-blue-500 to-blue-600 bg-clip-text text-4xl sm:text-xl md:text-xl tracking-tight text-transparent"
+  className="bg-gradient-to-r from-blue-200 via-blue-500 to-blue-600 bg-clip-text text-2xl lg:text-4xl tracking-tight text-transparent"
 >
   I{" "}
   <Typewriter
@@ -56,7 +56,7 @@ const Hero = () => {
               variants={container(0)}
               initial="hidden"
               animate="visible"
-              className="my-2 text-2xl sm:text-xl md:text-xl max-2xl py-6 font-light tracking-tighter"
+              className="my-2 text-xl lg:text-2xl max-2xl py-6 font-light tracking-tighter"
             >
               {" "}
               {HERO_CONTENT}
