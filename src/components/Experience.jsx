@@ -22,13 +22,13 @@ const Experience = () => {
               className="mb-8 p-6 rounded-lg shadow-lg bg-neutral-900"
               initial={{ opacity: 0, y: 50 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.5, delay: 0.5 }}
+              transition={{ duration: 0.5, delay: index * 0.2 }}
             >
               <div className="flex flex-wrap items-center">
                 <motion.div
                   initial={{ opacity: 0, x: -100 }}
                   animate={{ opacity: 1, x: 0 }}
-                  transition={{ duration: 0.5 }}
+                  transition={{ duration: index * 0.2 }}
                   className="w-full lg:w-2/5 flex flex-wrap lg:justify-center"
                 >
                   <p className="mb-2 text-xl lg:text-3xl text-neutral-200">
@@ -38,7 +38,7 @@ const Experience = () => {
                 <motion.div
                   initial={{ opacity: 0, x: 100 }}
                   animate={{ opacity: 1, x: 0 }}
-                  transition={{ duration: 0.5 }}
+                  transition={{ duration: index * 0.2 }}
                   className="w-full max-w-xl lg:w-3/5 flex flex-wrap lg:justify-left"
                 >
                   <h6 className="mb-2 text-xl lg:text-3xl font-semibold">
