@@ -47,6 +47,7 @@ const About = () => {
         animate="visible"
         className="text-center my-20"
       >
+       <div className="h-48 lg:h-60 flex items-center justify-center">
         <motion.div
           key={currentQuoteIndex} 
           variants={quoteAnimation}
@@ -62,6 +63,7 @@ const About = () => {
             </span>
           </p>
         </motion.div>
+         </div>
       </motion.div>
       <motion.h1
         variants={container(0.5)}
