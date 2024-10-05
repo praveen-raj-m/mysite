@@ -30,7 +30,7 @@ const Projects = () => {
               {PROJECTS.map((project, index) => (
                 <Flipped key={index} flipId={index}>
                   <div
-                    className="mb-8 p-6 w-full lg:w-1/3 cursor-pointer perspective"
+                    className=" p-6 w-full lg:w-1/3 cursor-pointer perspective"
                     onClick={() => handleClick(index)}
                   >
                     <div
