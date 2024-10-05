@@ -42,7 +42,7 @@ const Hero = () => {
     words={[
       "am a Full Stack Developer",
       "am a Data Analyst",
-      "am enjoy developing tools",
+      "enjoy developing tools",
       "never say no to a hike",
     ]}
     loop
