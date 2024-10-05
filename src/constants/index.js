@@ -16,16 +16,17 @@ export const QUOTES = [
     author: "Marvin Minsky",
     specialty: "Turing Award (1969)"
   },
+    {
+    quote: "Life is shockingly short; I don't want to waste that many days.",
+    author: "Andrew Ng",
+    specialty: "Time 100 Most Influential People in AI (2023)"
+  },
   {
     quote: "Self-righteousness has killed more people than smoking.",
     author: "John McCarthy",
     specialty: "Turing Award (1971)"
   },
-  {
-    quote: "Life is shockingly short; I don't want to waste that many days.",
-    author: "Andrew Ng",
-    specialty: "Time 100 Most Influential People in AI (2023)"
-  },
+
   {
     quote: "Even a cat has things it can do that AI cannot.",
     author: "Fei-Fei Li",
