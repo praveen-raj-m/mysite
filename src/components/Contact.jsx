@@ -1,15 +1,13 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import emailjs from "emailjs-com";
 import { motion } from "framer-motion";
-import { FaLinkedin } from "react-icons/fa";
-import { FaGithub } from "react-icons/fa";
-import { FaEnvelope } from "react-icons/fa";
+import { FaLinkedin, FaGithub, FaEnvelope } from "react-icons/fa";
 
 const Contact = () => {
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [message, setMessage] = useState("");
-  const [status, setStatus] = useState("");
+  const [isModalOpen, setIsModalOpen] = useState(false);
 
   const handleSubmit = (e) => {
     e.preventDefault();
@@ -23,16 +21,19 @@ const Contact = () => {
       )
       .then((response) => {
         console.log("Email sent successfully!", response.status, response.text);
-        setStatus(
-          "Your message has been sent and I will get back to you shortly!"
-        );
+        setIsModalOpen(true); // Open the modal on success
         setName("");
         setEmail("");
         setMessage("");
+
+        // Automatically close the modal after 7 seconds
+        setTimeout(() => {
+          setIsModalOpen(false);
+        }, 7000);
       })
       .catch((error) => {
         console.error("Error sending email:", error);
-        setStatus("Error sending message, please try again.");
+        alert("Error sending message, please try again.");
       });
   };
 
@@ -76,7 +77,7 @@ const Contact = () => {
               <FaGithub />
             </a>
           </motion.div>
-          <form className="my-4 " onSubmit={handleSubmit}>
+          <form className="my-4" onSubmit={handleSubmit}>
             <div className="mb-4 mx-auto">
               <div className="mb-4">
                 <label htmlFor="name" className="block text-sm font-medium">
@@ -92,7 +93,7 @@ const Contact = () => {
                 />
               </div>
               <div className="mb-4">
-                <label htmlFor="email" className="block text-sm  font-medium">
+                <label htmlFor="email" className="block text-sm font-medium">
                   Your Email
                 </label>
                 <input
@@ -108,7 +109,6 @@ const Contact = () => {
                 <label htmlFor="message" className="block text-sm font-medium">
                   Your Message
                 </label>
-
                 <textarea
                   id="message"
                   required
@@ -125,10 +125,24 @@ const Contact = () => {
               </button>
             </div>
           </form>
-
-          {status && <p className="mt-4 text-center">{status}</p>}
         </div>
       </div>
+
+      {/* Modal for success message */}
+      {isModalOpen && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center">
+          <div className="bg-neutral-900 text-white p-8 rounded-lg shadow-lg text-center w-full max-w-sm mx-auto">
+            <h2 className="text-2xl font-semibold mb-4">Message Sent!</h2>
+            <p>Thanks for reaching out! I'll get back to you as soon as I can..</p>
+            <button
+              onClick={() => setIsModalOpen(false)} // Close modal
+              className="mt-4 px-4 py-2 bg-neutral-700 text-white rounded hover:bg-neutral-600"
+            >
+              Close
+            </button>
+          </div>
+        </div>
+      )}
     </section>
   );
 };
