@@ -29,7 +29,7 @@ const Contact = () => {
         // Automatically close the modal after 7 seconds
         setTimeout(() => {
           setIsModalOpen(false);
-        }, 7000);
+        }, 5000);
       })
       .catch((error) => {
         console.error("Error sending email:", error);
