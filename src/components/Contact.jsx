@@ -88,11 +88,11 @@ const Contact = () => {
                   required
                   value={name}
                   onChange={(e) => setName(e.target.value)}
-                  className="mt-1 block w-full px-3 py-2 border rounded-md"
+                  className="mt-1 block w-full px-3 py-2 border text-black rounded-md"
                 />
               </div>
               <div className="mb-4">
-                <label htmlFor="email" className="block text-sm font-medium">
+                <label htmlFor="email" className="block text-sm  font-medium">
                   Your Email
                 </label>
                 <input
@@ -101,24 +101,25 @@ const Contact = () => {
                   required
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  className="mt-1 block w-full px-3 py-2 border rounded-md"
+                  className="mt-1 block w-full px-3 py-2 border text-black rounded-md"
                 />
               </div>
               <div className="mb-4">
                 <label htmlFor="message" className="block text-sm font-medium">
                   Your Message
                 </label>
+
                 <textarea
                   id="message"
                   required
                   value={message}
                   onChange={(e) => setMessage(e.target.value)}
-                  className="mt-1 block w-full px-3 py-2 border rounded-md"
+                  className="mt-1 block w-full px-3 py-2 border rounded-md text-black"
                 />
               </div>
               <button
                 type="submit"
-                className="bg-neutral-900 px-4 py-2 text-xl text-black rounded w-3/4 mx-auto block hover:bg-neutral-700"
+                className="bg-neutral-900 px-4 py-2 text-xl text-white rounded w-3/4 mx-auto block hover:bg-neutral-700"
               >
                 Send Message
               </button>
