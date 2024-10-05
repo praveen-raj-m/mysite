@@ -1,6 +1,7 @@
 
-import React from "react";
-import { ABOUT_TEXT, QUOTE, AUTHOR } from "../constants";
+
+import React, { useEffect, useState } from "react";
+import { ABOUT_TEXT, QUOTES } from "../constants"; // Ensure this imports your quotes
 import { motion } from "framer-motion";
 
 const container = (delay = 0) => ({
@@ -15,7 +16,28 @@ const container = (delay = 0) => ({
   },
 });
 
+const quoteAnimation = {
+  initial: { opacity: 0 },
+  enter: { opacity: 1, transition: { duration: 0.5 } },
+  exit: { opacity: 0, transition: { duration: 0.5 } },
+};
+
 const About = () => {
+  const [currentQuoteIndex, setCurrentQuoteIndex] = useState(0);
+  const [isVisible, setIsVisible] = useState(true);
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setIsVisible(false); 
+      setTimeout(() => {
+        setCurrentQuoteIndex((prevIndex) => (prevIndex + 1) % QUOTES.length);
+        setIsVisible(true); 
+      }, 500);
+    }, 6000); 
+
+    return () => clearInterval(interval); // Clean up on unmount
+  }, []);
+
   return (
     <div className="border-b border-neutral-900 pb-4">
       <motion.div
@@ -24,11 +46,21 @@ const About = () => {
         animate="visible"
         className="text-center my-20"
       >
-        <p className="text-4xl text-neutral-500 italic">
-          {QUOTE}{" "}
-          </p><p className="text-end mr-20 mt-10">
-          <span className="text-white text-4xl italic">- {AUTHOR}</span>
-        </p>
+        <motion.div
+          key={currentQuoteIndex} // Ensures the component remounts on quote change
+          variants={quoteAnimation}
+          initial="initial"
+          animate={isVisible ? "enter" : "exit"}
+        >
+          <p className="text:2xl lg:text-4xl text-white  italic">
+            {QUOTES[currentQuoteIndex].quote}
+          </p>
+          <p className="text-end mr-20 mt-10">
+            <span className="text-neutral-500 text:xl lg:text-2xl italic">
+              - {QUOTES[currentQuoteIndex].author}, {QUOTES[currentQuoteIndex].specialty}
+            </span>
+          </p>
+        </motion.div>
       </motion.div>
       <motion.h1
         variants={container(0.5)}
@@ -36,7 +68,7 @@ const About = () => {
         animate="visible"
         className="my-20 text-center text-5xl"
       >
-        So, Who Am <span className="text-neutral-500"> I?</span>
+        So, Who Am <span className="text-neutral-500">I?</span>
       </motion.h1>
       <div className="flex justify-center">
         <div className="w-full lg:w-3/4 justify-center">
