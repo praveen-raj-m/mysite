@@ -1,6 +1,6 @@
 
 import React, { useEffect, useState } from "react";
-import { ABOUT_TEXT, QUOTES } from "../constants"; 
+import { ABOUT_TEXT, QUOTES } from "../constants/index.jsx"; 
 import { motion } from "framer-motion";
 
 const container = (delay = 0) => ({
