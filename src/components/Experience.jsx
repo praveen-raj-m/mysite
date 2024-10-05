@@ -55,7 +55,7 @@ const Experience = () => {
                       <motion.span
                         key={techIndex}
                         whileHover={{ scale: 1.1 }}
-                        className="mr-2 mt-4 rounded bg-black px-2 py-1 text-xl font-medium text-blue-800"
+                        className="flex flex-wrap gap-2 rounded bg-black px-2 py-1 text-xl font-medium text-blue-400"
                       >
                         {tech}
                       </motion.span>
