@@ -72,7 +72,7 @@ const Projects = () => {
                         <h6 className="mb-2 text-xl lg:text-3xl font-semibold text-white">
                           {project.title} - Detailed View
                         </h6>
-                        <p className="mb-4 text-xl lg:text-2xl text-neutral-400">
+                        <p className="mb-4 text-md lg:text-2xl text-neutral-400">
                           {project.description}
                         </p>
                       </div>
