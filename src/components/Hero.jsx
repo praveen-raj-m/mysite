@@ -32,25 +32,25 @@ const Hero = () => {
 
           <div className="flex flex-col items-start ">
             <motion.span
-              variants={container(0)}
-              initial="hidden"
-              animate="visible"
-              className="bg-gradient-to-r from-blue-200 via-blue-500 to-blue-600 bg-clip-text text-4xl tracking-tight text-transparent"
-            >
-              I{" "}
-              <Typewriter
-                words={[
-                  "am a Full Stack Developer",
-                  "am a Data Analyst",
-                  "am passionate about developing",
-                  "never say no to hot chocolates",
-                ]}
-                loop
-                cursorBlinking
-                typeSpeed={40}
-                deleteSpeed={30}
-              />
-            </motion.span>
+  variants={container(0)}
+  initial="hidden"
+  animate="visible"
+  className="bg-gradient-to-r from-blue-200 via-blue-500 to-blue-600 bg-clip-text text-4xl sm:text-2xl tracking-tight text-transparent"
+>
+  I{" "}
+  <Typewriter
+    words={[
+      "am a Full Stack Developer",
+      "am a Data Analyst",
+      "am passionate about developing",
+      "never say no to hot chocolates",
+    ]}
+    loop
+    cursorBlinking
+    typeSpeed={40}
+    deleteSpeed={30}
+  />
+</motion.span>
 
             <motion.p
               variants={container(0)}
