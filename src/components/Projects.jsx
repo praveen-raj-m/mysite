@@ -34,7 +34,7 @@ const Projects = () => {
                     onClick={() => handleClick(index)}
                   >
                     <div
-                      className={`relative h-[575px] transition-transform duration-500 transform-style preserve-3d ${
+                      className={`relative h-[450px] lg:h-[575px] transition-transform duration-500 transform-style preserve-3d ${
                         flipped === index ? "rotate-y-180" : ""
                       }`}
                     >
@@ -45,13 +45,13 @@ const Projects = () => {
                           className="w-full h-48 object-cover"
                         />
                         <div className="flex-grow">
-                          <h6 className="my-4 text-3xl font-semibold text-white">
+                          <h6 className="my-4 text-xl lg:text-3xl font-semibold text-white">
                             {project.title}
                           </h6>
                           <div className="flex flex-wrap gap-2">
                             {project.technologies.map((tech, techIndex) => (
                               <span
-                                className="py-2 px-4 rounded bg-neutral-900 text-xl font-medium text-blue-400"
+                                className="py-2 px-4 rounded bg-neutral-900 text-md lg:text-xl font-medium text-blue-400"
                                 key={techIndex}
                               >
                                 {tech}
@@ -69,10 +69,10 @@ const Projects = () => {
                         </a>
                       </div>
                       <div className="absolute w-full h-full backface-hidden bg-neutral-800 rounded-lg shadow-lg p-6 transform rotate-y-180">
-                        <h6 className="mb-2 text-3xl font-semibold text-white">
+                        <h6 className="mb-2 text-xl lg:text-3xl font-semibold text-white">
                           {project.title} - Detailed View
                         </h6>
-                        <p className="mb-4 text-2xl text-neutral-400">
+                        <p className="mb-4 text-xl lg:text-2xl text-neutral-400">
                           {project.description}
                         </p>
                       </div>
