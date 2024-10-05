@@ -22,7 +22,7 @@ const Experience = () => {
               className="mb-8 p-6 rounded-lg shadow-lg bg-neutral-900"
               initial={{ opacity: 0, y: 50 }}
               whileInView={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.5, delay: 0.5 }}
+              transition={{ duration: 0.5, delay: 0.2 }}
               viewport={{ once: true, amount: 0.3 }}
             >
               <div className="flex flex-wrap items-center">
