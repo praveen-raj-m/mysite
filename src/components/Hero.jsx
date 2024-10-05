@@ -42,8 +42,8 @@ const Hero = () => {
     words={[
       "am a Full Stack Developer",
       "am a Data Analyst",
-      "am passionate about developing",
-      "never say no to hot chocolates",
+      "am enjoy developing tools",
+      "never say no to a hike",
     ]}
     loop
     cursorBlinking
