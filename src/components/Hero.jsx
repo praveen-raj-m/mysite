@@ -1,5 +1,5 @@
 import React from "react";
-import { HERO_CONTENT } from "../constants/components.jsx";
+import { HERO_CONTENT } from "../constants/index.jsx";
 import profilePic from "../assets/mypic.png";
 import { Typewriter } from "react-simple-typewriter";
 import { motion } from "framer-motion";
