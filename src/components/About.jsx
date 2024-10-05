@@ -46,7 +46,7 @@ const About = () => {
             animate="visible"
             className="flex justify-center text-center"
           >
-            <p className="my-2 max-w-4xl text-2xl py-6">{ABOUT_TEXT}</p>
+            <p className="my-2 max-w-4xl text-xl lg:text-2xl py-6">{ABOUT_TEXT}</p>
           </motion.div>
         </div>
       </div>
