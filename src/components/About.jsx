@@ -1,7 +1,8 @@
 
 
+
 import React, { useEffect, useState } from "react";
-import { ABOUT_TEXT, QUOTES } from "../constants"; // Ensure this imports your quotes
+import { ABOUT_TEXT, QUOTES } from "../constants"; 
 import { motion } from "framer-motion";
 
 const container = (delay = 0) => ({
@@ -35,7 +36,7 @@ const About = () => {
       }, 500);
     }, 6000); 
 
-    return () => clearInterval(interval); // Clean up on unmount
+    return () => clearInterval(interval); 
   }, []);
 
   return (
@@ -47,16 +48,16 @@ const About = () => {
         className="text-center my-20"
       >
         <motion.div
-          key={currentQuoteIndex} // Ensures the component remounts on quote change
+          key={currentQuoteIndex} 
           variants={quoteAnimation}
           initial="initial"
           animate={isVisible ? "enter" : "exit"}
         >
-          <p className="text:2xl lg:text-4xl text-white  italic">
+          <p className="text-2xl lg:text-4xl text-white  italic">
             {QUOTES[currentQuoteIndex].quote}
           </p>
           <p className="text-end mr-20 mt-10">
-            <span className="text-neutral-500 text:xl lg:text-2xl italic">
+            <span className="text-neutral-500 text-end text-lg lg:text-2xl italic">
               - {QUOTES[currentQuoteIndex].author}, {QUOTES[currentQuoteIndex].specialty}
             </span>
           </p>
