@@ -1,4 +1,3 @@
-
 import React from "react";
 import { EXPERIENCES } from "../constants/index.jsx";
 import { motion } from "framer-motion";
@@ -9,9 +8,10 @@ const Experience = () => {
       <div className="border-b border-neutral-900 pb-4">
         <motion.h1
           initial={{ opacity: 0, y: -100 }}
-          animate={{ opacity: 1, y: 0 }}
+          whileInView={{ opacity: 1, y: 0 }}
           transition={{ duration: 1 }}
           className="my-20 text-center text-5xl"
+          viewport={{ once: true }} 
         >
           Experience
         </motion.h1>
@@ -21,15 +21,17 @@ const Experience = () => {
               key={index} 
               className="mb-8 p-6 rounded-lg shadow-lg bg-neutral-900"
               initial={{ opacity: 0, y: 50 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.5, delay: index * 0.2 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.5, delay: 0.5 }}
+              viewport={{ once: true, amount: 0.3 }}
             >
               <div className="flex flex-wrap items-center">
                 <motion.div
                   initial={{ opacity: 0, x: -100 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  transition={{ duration: index * 0.2 }}
+                  whileInView={{ opacity: 1, x: 0 }}
+                  transition={{ duration: 0.5 }}
                   className="w-full lg:w-2/5 flex flex-wrap lg:justify-center"
+                  viewport={{ once: true }} 
                 >
                   <p className="mb-2 text-xl lg:text-3xl text-neutral-200">
                     {experience.year}
@@ -37,9 +39,10 @@ const Experience = () => {
                 </motion.div>
                 <motion.div
                   initial={{ opacity: 0, x: 100 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  transition={{ duration: index * 0.2 }}
+                  whileInView={{ opacity: 1, x: 0 }}
+                  transition={{ duration: 0.5 }}
                   className="w-full max-w-xl lg:w-3/5 flex flex-wrap lg:justify-left"
+                  viewport={{ once: true }} 
                 >
                   <h6 className="mb-2 text-xl lg:text-3xl font-semibold">
                     {experience.role} -{" "}
