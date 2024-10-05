@@ -17,10 +17,11 @@ export const QUOTES = [
     specialty: "Turing Award (1969)"
   },
     {
-    quote: "Life is shockingly short; I don't want to waste that many days.",
-    author: "Andrew Ng",
-    specialty: "Time 100 Most Influential People in AI (2023)"
+    quote: "What would I do if I weren’t afraid? And then go do it.",
+    author: "Sheryl Sandberg",
+    specialty: "COO of Facebook"
   },
+   
   {
     quote: "Self-righteousness has killed more people than smoking.",
     author: "John McCarthy",
@@ -43,9 +44,9 @@ export const QUOTES = [
     specialty: "Pirates of the Caribbean"
   },
   {
-    quote: "What would I do if I weren’t afraid? And then go do it.",
-    author: "Sheryl Sandberg",
-    specialty: "COO of Facebook"
+    quote: "Life is shockingly short; I don't want to waste that many days.",
+    author: "Andrew Ng",
+    specialty: "Time 100 Most Influential People in AI (2023)"
   },
   {
     quote: "Get busy living, or get busy dying.",
