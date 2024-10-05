@@ -1,7 +1,7 @@
 
 
 import React, { useState } from "react";
-import { PROJECTS } from "../constants";
+import { PROJECTS } from "../constants/index.jsx";
 import { motion } from "framer-motion";
 import { Flipper, Flipped } from "react-flip-toolkit";
 import { FaGithub } from "react-icons/fa"; 
