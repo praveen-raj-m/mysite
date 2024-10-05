@@ -1,10 +1,8 @@
-
-
 import React, { useState } from "react";
 import { PROJECTS } from "../constants/index.jsx";
 import { motion } from "framer-motion";
 import { Flipper, Flipped } from "react-flip-toolkit";
-import { FaGithub } from "react-icons/fa"; 
+import { FaGithub } from "react-icons/fa";
 
 const Projects = () => {
   const [flipped, setFlipped] = useState(null);
@@ -22,6 +20,7 @@ const Projects = () => {
             initial={{ opacity: 0, y: -100 }}
             transition={{ duration: 0.5 }}
             className="my-20 text-center text-5xl text-white"
+            viewport={{ once: true }} 
           >
             Projects
           </motion.h1>
@@ -29,9 +28,13 @@ const Projects = () => {
             <div className="flex flex-wrap justify-center">
               {PROJECTS.map((project, index) => (
                 <Flipped key={index} flipId={index}>
-                  <div
-                    className=" p-6 w-full lg:w-1/3 cursor-pointer perspective"
+                  <motion.div
+                    className="p-6 w-full lg:w-1/3 cursor-pointer perspective"
                     onClick={() => handleClick(index)}
+                    initial={{ opacity: 0, y: 50 }} 
+                    whileInView={{ opacity: 1, y: 0 }} 
+                    transition={{ duration: 0.5, delay: index * 0.1 }} 
+                    viewport={{ once: true }} 
                   >
                     <div
                       className={`relative h-[450px] lg:h-[575px] transition-transform duration-500 transform-style preserve-3d ${
@@ -77,7 +80,7 @@ const Projects = () => {
                         </p>
                       </div>
                     </div>
-                  </div>
+                  </motion.div>
                 </Flipped>
               ))}
             </div>
