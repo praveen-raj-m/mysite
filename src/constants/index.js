@@ -10,8 +10,53 @@ export const HERO_CONTENT = ' Hi, I’m Praveen Raj, a passionate software devel
 
 export const ABOUT_TEXT = `I am currently pursuing my Master's in Computer Science at Arizona State University, where I am honing my skills in AI, machine learning, and full-stack development. My passion lies in creating impactful solutions using technologies like React, MongoDB, and AWS. With a strong foundation in data analytics, I have developed dashboards and automated pipelines that save time, reduce errors, and provide actionable insights. When I’m not coding, I’m exploring new advancements in AI or go on a Hike!`;
 
-export const QUOTE = "When something is important enough, you do it even if the odds are not in your favor.";
-export const AUTHOR = "Elon Musk";
+export const QUOTES = [
+  {
+    quote: "You don't understand anything until you learn it more than one way.",
+    author: "Marvin Minsky",
+    specialty: "Turing Award (1969)"
+  },
+  {
+    quote: "Self-righteousness has killed more people than smoking.",
+    author: "John McCarthy",
+    specialty: "Turing Award (1971)"
+  },
+  {
+    quote: "Life is shockingly short; I don't want to waste that many days.",
+    author: "Andrew Ng",
+    specialty: "Time 100 Most Influential People in AI (2023)"
+  },
+  {
+    quote: "Even a cat has things it can do that AI cannot.",
+    author: "Fei-Fei Li",
+    specialty: "Inventor of ImageNet"
+  },
+  {
+    quote: "Data is a precious thing and will last longer than the systems themselves.",
+    author: "Tim Berners-Lee",
+    specialty: "Inventor of the World Wide Web"
+  },
+  {
+    quote: "Not all treasure is silver and gold, mate.",
+    author: "Jack Sparrow",
+    specialty: "Pirates of the Caribbean"
+  },
+  {
+    quote: "What would I do if I weren’t afraid? And then go do it.",
+    author: "Sheryl Sandberg",
+    specialty: "COO of Facebook"
+  },
+  {
+    quote: "Get busy living, or get busy dying.",
+    author: "Andy Dufresne",
+    specialty: "The Shawshank Redemption"
+  },
+  {
+    quote: "The journey of a thousand miles begins with one step.",
+    author: "Lao Tzu",
+    specialty: "Chinese Philosopher"
+  }
+];
 
 
 export const EXPERIENCES = [
@@ -87,7 +132,7 @@ export const PROJECTS = [
     image: project4,
     description: `Developed a personal portfolio website using ReactJS, showcasing projects, skills, and experiences. Integrated animations and styled the site with Tailwind CSS for a modern and responsive design.`,
     technologies: ["ReactJS", "TailwindCSS", "JavaScript","React Animations"],
-    github: "https://github.com/praveen-raj-m/mysite",
+    github: "",
   },
 ];
 
