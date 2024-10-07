@@ -45,7 +45,7 @@ const Projects = () => {
                         <img
                           src={project.image}
                           alt={project.title}
-                          className="w-full h-48 object-cover"
+                          className="w-full h-48 object-cover rounded-lg"
                         />
                         <div className="flex-grow">
                           <h6 className="my-4 text-xl lg:text-3xl font-semibold text-white">
