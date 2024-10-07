@@ -67,7 +67,7 @@ const About = () => {
         variants={container(0.5)}
         initial="hidden"
         animate="visible"
-        className="my-20 text-center text-5xl"
+        className="lg:my-20  my-5 text-center text-5xl"
       >
         So, Who Am <span className="text-neutral-500">I?</span>
       </motion.h1>
