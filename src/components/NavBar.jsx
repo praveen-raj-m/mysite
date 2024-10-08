@@ -29,7 +29,7 @@ const NavBar = () => {
             Home
           </a>
           <a href="#experiences" className="text-lg px-2 py-2 text-white">
-            Experiences
+            Experience
           </a>
           <a href="#projects" className="text-lg px-2 py-2 text-white">
             Projects
@@ -65,7 +65,7 @@ const NavBar = () => {
             className="text-lg px-4 py-2 text-white hover:bg-gray-700"
             onClick={() => setIsOpen(false)} 
           >
-            Experiences
+            Experience
           </a>
           <a
             href="#projects"
