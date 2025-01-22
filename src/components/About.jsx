@@ -15,17 +15,17 @@ const container = (delay = 0) => ({
     },
   },
 });
-
+public/myimages/
 const images = [
-  { id: 1, img: "src/assets/myimages/image1.jpeg" },
-  { id: 2, img: "src/assets/myimages/image5.jpeg" },
-  { id: 3, img: "src/assets/myimages/image4.jpeg" },
-  { id: 4, img: "src/assets/myimages/image7.jpeg" },
-  { id: 5, img: "src/assets/myimages/image8.jpeg" },
-  { id: 6, img: "src/assets/myimages/image9.jpeg" },
-  { id: 7, img: "src/assets/myimages/image10.jpeg" },
-  { id: 8, img: "src/assets/myimages/image11.jpeg" },
-  { id: 9, img: "src/assets/myimages/image2.jpeg" },
+  { id: 1, img: "public/myimages/image1.jpeg" },
+  { id: 2, img: "public/myimages/image5.jpeg" },
+  { id: 3, img: "public/myimages/image4.jpeg" },
+  { id: 4, img: "public/myimages/image7.jpeg" },
+  { id: 5, img: "public/myimages/image8.jpeg" },
+  { id: 6, img: "public/myimages/image9.jpeg" },
+  { id: 7, img: "public/myimages/image10.jpeg" },
+  { id: 8, img: "public/myimages/image11.jpeg" },
+  { id: 9, img: "public/myimages/image2.jpeg" },
 ];
 
 const About = () => {
