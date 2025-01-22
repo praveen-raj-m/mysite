@@ -99,7 +99,7 @@ export default function Stack({
     >
       {cards.map((card, index) => {
         const randomRotate = randomRotation
-          ? Math.random() * 11 -1
+          ? Math.random() * 11 - 5 
           : 0;
 
         return (
