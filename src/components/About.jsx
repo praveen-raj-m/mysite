@@ -46,99 +46,96 @@ const About = () => {
 
   return (
     <section id="about">
-    <div className="border-b min-h-screen border-neutral-900 pb-2">
-      <motion.h1
-        variants={container(0.5)}
-        initial="hidden"
-        animate="visible"
-        className="lg:my-5  my-5 text-center text-5xl"
-      >
-        So, Who Am <span className="text-neutral-500">I?</span>
-      </motion.h1>
-
-      <div className="flex flex-col w-full lg:flex-row items-center justify-center gap-10 p-4">
-        <div className=" w-10/11">
-          <motion.div
-            variants={container(1)}
-            initial="hidden"
-            animate="visible"
-          >
-            <p className="my-2 text-l text-justify lg:text-2xl py-4">
-             
-              <br />
-              I’m pursuing my Master’s in Computer Science at Arizona
-              State University, specializing in AI, machine learning, and
-              full-stack development. <br />
-              <br />
-              I’m also working as a Full stack Developer at the Energy
-              Efficiency Center, ASU, where I'm leading the development of the{" "}
-              <u>
-                <a href="https://piee.eec.asu.edu">PIEE database</a>
-              </u>
-              , supported by{" "}
-              <u>
-                <a href="https://www.usaid.gov/">USAID</a>
-              </u>{" "}
-              to help manufacturers and researchers across America.
-              <br />
-              <br /> Through my experiences, I have deployed and maintained web
-              applications, built dashboards, and automated pipelines to save
-              time and improve performance.
-              <br />
-              <br />
-
-              A great man once said,{" "}
-              <em>"In the middle of every difficulty lies opportunity."</em>
-              <br />
-              I’d like to say I’m great at finding those opportunities, but I
-              mostly just find bugs to fix.
-              <br />
-
-              <br />
-              And also, I love to travel!
-              <br />
-            </p>
-          </motion.div>
-        </div>
-
-        <div className="flex justify-center">
-          <Stack
-            randomRotation={true}
-            sensitivity={100}
-            cardDimensions={{
-              width: window.innerWidth >= 1024 ? 600 : 275,
-              height: window.innerWidth >= 1024 ? 600 : 275,
-            }}
-            cardsData={images}
-          />
-        </div>
-      </div>
-
-      <div className="w-full justify-center">
-        <motion.div
+      <div className="border-b min-h-screen border-neutral-900 pb-2">
+        <motion.h1
           variants={container(0.5)}
           initial="hidden"
           animate="visible"
-          className="text-center my-20"
+          className="lg:my-5  my-5 text-center text-5xl"
         >
-          <div className=" flex justify-center">
-            <TrueFocus
-              sentence="Stay Curious , Stay Humble , Keep Building "
-              manualMode={false}
-              blurAmount={3}
-              borderColor="rgb(0, 216, 255)"
-              animationDuration={1.3}
-              pauseBetweenAnimations={0.5}
-            />
+          So, Who Am <span className="text-neutral-500">I?</span>
+        </motion.h1>
 
-            <p className="text-2xl lg:text-4xl  items-center text-white  italic"></p>
+        <div className="flex flex-col w-full lg:flex-row items-center justify-center gap-10 p-4">
+          <div className=" w-10/11">
+            <motion.div
+              variants={container(1)}
+              initial="hidden"
+              animate="visible"
+            >
+              <p className="my-2 text-l text-justify lg:text-2xl py-4">
+                <br />
+                I’m pursuing my Master’s in Computer Science at Arizona State
+                University, specializing in AI, machine learning, and full-stack
+                development. <br />
+                <br />
+                As a Full stack Developer at the Energy Efficiency Center at
+                ASU, I'm leading the development of the{" "}
+                <u>
+                  <a href="https://piee.eec.asu.edu">PIEE database</a>
+                </u>
+                , supported by{" "}
+                <u>
+                  <a href="https://www.usaid.gov/">USAID</a>
+                </u>{" "}
+                to help manufacturers and researchers across America.
+                <br />
+                <br /> Through my experiences, I have deployed and maintained
+                web applications, built dashboards, and automated pipelines to
+                improve performance and efficiency.
+                <br />
+                <br />
+                Albert Einstein once said,{" "}
+                <em>
+                  "In the middle of every difficulty, lies opportunity."
+                </em>{" "}
+                I’d like to say I’m great at finding those opportunities, but I
+                mostly just find bugs to fix.
+                <br />
+                <br />
+                And also, I love to travel!
+                <br />
+              </p>
+            </motion.div>
           </div>
-        </motion.div>
+
+          <div className="flex justify-center">
+            <Stack
+              randomRotation={true}
+              sensitivity={100}
+              cardDimensions={{
+                width: window.innerWidth >= 1024 ? 600 : 275,
+                height: window.innerWidth >= 1024 ? 600 : 275,
+              }}
+              cardsData={images}
+            />
+          </div>
+        </div>
+
+        <div className="w-full justify-center">
+          <motion.div
+            variants={container(0.5)}
+            initial="hidden"
+            animate="visible"
+            className="text-center my-20"
+          >
+            <div className=" flex justify-center">
+              <TrueFocus
+                sentence="Stay Curious , Stay Humble , Keep Building "
+                manualMode={false}
+                blurAmount={3}
+                borderColor="rgb(0, 216, 255)"
+                animationDuration={1.3}
+                pauseBetweenAnimations={0.5}
+              />
+
+              <p className="text-2xl lg:text-4xl  items-center text-white  italic"></p>
+            </div>
+          </motion.div>
+        </div>
       </div>
-    </div>
     </section>
   );
-
 };
 
 export default About;
