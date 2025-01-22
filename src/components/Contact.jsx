@@ -48,7 +48,7 @@ const Contact = () => {
             transition={{ duration: 1 }}
             className="my-10 text-center text-5xl"
           >
-            Let's Talk !!
+            Let's Connect! 
           </motion.h1>
           <motion.div
             whileInView={{ opacity: 1, y: 0 }}
@@ -135,7 +135,7 @@ const Contact = () => {
         <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center">
           <div className="bg-neutral-900 text-white p-8 rounded-lg shadow-lg text-center w-full max-w-sm mx-auto">
             <h2 className="text-2xl font-semibold mb-4">Message Sent!</h2>
-            <p>Thanks for reaching out! I'll get back to you as soon as I can..</p>
+            <p>Thanks for reaching out! I'll get back to you as soon as I can.</p>
             <button
               onClick={() => setIsModalOpen(false)} // Close modal
               className="mt-4 px-4 py-2 bg-neutral-700 text-white rounded hover:bg-neutral-600"
