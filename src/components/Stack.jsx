@@ -159,18 +159,28 @@ export default function Stack({
   const initialCards = cardsData.length
     ? cardsData
     : [
-        { id: 1, img: "https://images.unsplash.com/photo-1480074568708-e7b720bb3f09?q=80&w=500&auto=format" },
-        { id: 2, img: "https://images.unsplash.com/photo-1449844908441-8829872d2607?q=80&w=500&auto=format" },
-        { id: 3, img: "https://images.unsplash.com/photo-1452626212852-811d58933cae?q=80&w=500&auto=format" },
-        { id: 4, img: "https://images.unsplash.com/photo-1572120360610-d971b9d7767c?q=80&w=500&auto=format" }
+      { id: 1, img: "myimages/image1.jpeg" },
+      { id: 2, img: "myimages/image5.jpeg" },
+      { id: 3, img: "myimages/image4.jpeg" },
+      { id: 4, img: "myimages/image7.jpeg" },
+      { id: 5, img: "myimages/image8.jpeg" },
+      { id: 6, img: "myimages/image9.jpeg" },
+      { id: 7, img: "myimages/image10.jpeg" },
+      { id: 8, img: "myimages/image11.jpeg" },
+      { id: 9, img: "myimages/image2.jpeg" },
       ];
 
   const [cards, setCards] = useState(initialCards);
   const allImages = [
-    "https://images.unsplash.com/photo-1603570823377-78d24d2fda1f?q=80&w=500&auto=format",
-    "https://images.unsplash.com/photo-1518806118471-f28b20a1d79d?q=80&w=500&auto=format",
-    "https://images.unsplash.com/photo-1523275335684-37898b6baf30?q=80&w=500&auto=format",
-    "https://images.unsplash.com/photo-1506748686214-e9df14d4d9d0?q=80&w=500&auto=format",
+    "myimages/image1.jpeg",
+    "myimages/image5.jpeg",
+    "myimages/image4.jpeg",
+    "myimages/image7.jpeg",
+    "myimages/image8.jpeg",
+    "myimages/image9.jpeg",
+    "myimages/image10.jpeg",
+    "myimages/image11.jpeg",
+    "myimages/image2.jpeg",
   ];
 
   const sendToBack = (id) => {
