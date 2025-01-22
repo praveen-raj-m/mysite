@@ -156,10 +156,22 @@ export default function Stack({
   cardsData = [],
   animationConfig = { stiffness: 260, damping: 20 },
 }) {
-  const initialCards = cardsData
+  const initialCards = cardsData.length
+    ? cardsData
+    : [
+        { id: 1, img: "https://images.unsplash.com/photo-1480074568708-e7b720bb3f09?q=80&w=500&auto=format" },
+        { id: 2, img: "https://images.unsplash.com/photo-1449844908441-8829872d2607?q=80&w=500&auto=format" },
+        { id: 3, img: "https://images.unsplash.com/photo-1452626212852-811d58933cae?q=80&w=500&auto=format" },
+        { id: 4, img: "https://images.unsplash.com/photo-1572120360610-d971b9d7767c?q=80&w=500&auto=format" }
+      ];
 
   const [cards, setCards] = useState(initialCards);
-
+  const allImages = [
+    "https://images.unsplash.com/photo-1603570823377-78d24d2fda1f?q=80&w=500&auto=format",
+    "https://images.unsplash.com/photo-1518806118471-f28b20a1d79d?q=80&w=500&auto=format",
+    "https://images.unsplash.com/photo-1523275335684-37898b6baf30?q=80&w=500&auto=format",
+    "https://images.unsplash.com/photo-1506748686214-e9df14d4d9d0?q=80&w=500&auto=format",
+  ];
 
   const sendToBack = (id) => {
     setCards((prev) => {
