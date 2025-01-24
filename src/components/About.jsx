@@ -24,7 +24,6 @@ const images = [
   { id: 5, img: "myimages/image7.jpeg" },
   { id: 6, img: "myimages/image8.jpeg" },
   { id: 7, img: "myimages/image10.jpeg" },
-  { id: 8, img: "myimages/image13.jpeg" },
   { id: 11, img: "myimages/image2.jpeg" },
   { id: 10, img: "myimages/image14.jpeg" },
   { id: 9, img: "myimages/image12.jpeg" },
