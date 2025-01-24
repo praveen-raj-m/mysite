@@ -25,7 +25,7 @@ const Hero = () => {
         <div className="flex flex-wrap">
           <div className="w-full lg:w-1/2">
             <div className="flex flex-col items-start  ">
-              <SplitText
+              {/* <SplitText
                 text="Hello !!"
                 className="pb-16 text-6xl font-thin tracking-tight lg:mt-16 lg:text-8xl"
                 delay={150}
@@ -37,7 +37,7 @@ const Hero = () => {
                 easing="easeOutCubic"
                 threshold={0.2}
                 rootMargin="-50px"
-              />
+              /> */}
               <BlurText
                 text="Praveen Raj Mohanraj"
                 delay={150}
