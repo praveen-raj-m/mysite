@@ -80,7 +80,7 @@ const Hero = () => {
                 className="my-2 text-xl lg:text-2xl max-2xl py-6 font-light tracking-tighter"
               >
                 {" "}
-                I'm a Computer Scientist with experience in Data Analysis
+                I'm a Computer Science Graduate with experience in Data Analysis
                 and Full Stack Development. I love building cool things. :-) 
                 <br />
                 <br />
