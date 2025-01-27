@@ -3,6 +3,7 @@ import { ABOUT_TEXT, QUOTES } from "../constants/index.jsx";
 import { motion } from "framer-motion";
 import TrueFocus from "./TrueFocus";
 import Stack from "./Stack";
+// import { HandRaisedIcon } from '@heroicons/react/24/outline';
 
 const container = (delay = 0) => ({
   hidden: { opacity: 0, y: -100 },
@@ -27,7 +28,6 @@ const images = [
   { id: 11, img: "myimages/image2.jpeg" },
   { id: 10, img: "myimages/image14.jpeg" },
   { id: 9, img: "myimages/image12.jpeg" },
-
 ];
 
 const About = () => {
@@ -66,25 +66,24 @@ const About = () => {
               animate="visible"
             >
               <p className="my-2 text-l text-justify lg:text-2xl py-4">
-                <br />
-                I’m pursuing my Master’s in Computer Science at Arizona State
-                University, specializing in AI, machine learning, and full-stack
-                development. <br />
-                <br />
-                As a Full stack Developer at the Energy Efficiency Center at
-                ASU, I'm leading the development of the{" "}
+                Currently, I'm leading the development of the{" "}
                 <u>
                   <a href="https://piee.eec.asu.edu">PIEE database</a>
                 </u>
-                , supported by{" "}
+                , at the Energy Efficiency Center at ASU supported by{" "}
                 <u>
                   <a href="https://www.usaid.gov/">USAID</a>
                 </u>{" "}
                 to help manufacturers and researchers across America.
                 <br />
-                <br /> Through my experiences, I have deployed and maintained
-                web applications, built dashboards, and automated pipelines to
-                improve performance and efficiency.
+                <br />
+                I’m pursuing my Master’s in Computer Science at Arizona State
+                University, specializing in AI, machine learning, and full-stack
+                development.
+                <br />
+                <br /> As part of my projects, I have deployed and maintained
+                web applications, built dashboards, automated pipelines, and
+                built AI solutions to improve performance and efficiency.
                 <br />
                 <br />
                 Albert Einstein once said,{" "}
@@ -101,7 +100,7 @@ const About = () => {
             </motion.div>
           </div>
 
-          <div className="flex justify-center">
+          <div className="flex flex-col justify-center items-center">
             <Stack
               randomRotation={true}
               sensitivity={100}
@@ -111,6 +110,10 @@ const About = () => {
               }}
               cardsData={images}
             />
+            {/* <div className="flex items-center my-2">
+    <HandRaisedIcon className="h-6 w-6 text-white lg:h-8 lg:w-8 mr-2" />
+    <p className="text-l text-justify lg:text-2xl py-4 text-white">Tap</p>
+  </div> */}
           </div>
         </div>
 
