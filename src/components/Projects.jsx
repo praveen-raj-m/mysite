@@ -56,7 +56,7 @@ const Projects = () => {
                             className="w-full h-48 object-cover rounded-lg"
                           />
                           <div className="flex-grow">
-                            <h6 className="my-4 text-xl lg:text-3xl font-semibold text-white">
+                            <h6 className="my-4 text-xl lg:text-2xl font-semibold text-white">
                               {project.title}
                             </h6>
                             <div className="flex flex-wrap gap-2">

@@ -90,7 +90,7 @@ const Contact = () => {
                   required
                   value={name}
                   onChange={(e) => setName(e.target.value)}
-                  className="mt-1 block w-full px-3 py-2 border text-black rounded-md"
+                  className="mt-1 block w-full px-3 py-2 border bg-gray-400 text-black rounded-md"
                 />
               </div>
               <div className="mb-4">
@@ -103,7 +103,7 @@ const Contact = () => {
                   required
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  className="mt-1 block w-full px-3 py-2 border text-black rounded-md"
+                  className="mt-1 block w-full px-3 py-2 bg-gray-400 border text-black rounded-md"
                 />
               </div>
               <div className="mb-4">
@@ -115,7 +115,7 @@ const Contact = () => {
                   required
                   value={message}
                   onChange={(e) => setMessage(e.target.value)}
-                  className="mt-1 block w-full px-3 py-2 border rounded-md text-black"
+                  className="mt-1 block w-full px-3 py-2 border bg-gray-400 rounded-md text-black"
                 />
               </div>
               <button
