@@ -2,7 +2,7 @@ import project1 from "../assets/projects/project-1.jpeg";
 import project2 from "../assets/projects/project-2.png";
 import project3 from "../assets/projects/project-3.png";
 import project4 from "../assets/projects/project-4.png";
-import project5 from "../assets/projects/project-5.png";
+import project5 from "../assets/projects/Project-5.png";
 
 
 export const HERO_CONTENT = 'I am a Computer Science student experienced in Data Analysis and Full stack Development.  I love creating tools that make a difference in people’s lives. I adapt quickly to new technologies and enjoy diving into the latest trends, constantly learning and growing. For me, it’s not just about building, it’s about creating productive applications. Let’s create something amazing together!';
