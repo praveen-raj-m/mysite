@@ -22,12 +22,12 @@ const Contact = () => {
       )
       .then((response) => {
         console.log("Email sent successfully!", response.status, response.text);
-        setIsModalOpen(true); // Open the modal on success
+        setIsModalOpen(true); 
         setName("");
         setEmail("");
         setMessage("");
 
-        // Automatically close the modal after 7 seconds
+        
         setTimeout(() => {
           setIsModalOpen(false);
         }, 5000);
