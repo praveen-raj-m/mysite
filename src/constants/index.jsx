@@ -2,7 +2,7 @@ import project1 from "../assets/projects/project-1.jpeg";
 import project2 from "../assets/projects/project-2.png";
 import project3 from "../assets/projects/project-3.png";
 import project4 from "../assets/projects/project-4.png";
-import project5 from "../assets/projects/project-4.jpg";
+import project5 from "../assets/projects/project-5.png";
 
 
 export const HERO_CONTENT = 'I am a Computer Science student experienced in Data Analysis and Full stack Development.  I love creating tools that make a difference in people’s lives. I adapt quickly to new technologies and enjoy diving into the latest trends, constantly learning and growing. For me, it’s not just about building, it’s about creating productive applications. Let’s create something amazing together!';
@@ -145,15 +145,23 @@ export const PROJECTS = [
     image: project4,
     description: `Developed a personal portfolio website using ReactJS, showcasing projects, skills, and experiences. Integrated animations and styled the site with Tailwind CSS for a modern and responsive design.`,
     technologies: ["ReactJS", "TailwindCSS", "JavaScript","React Animations"],
-    github: "",
+    github: "https://github.com/praveen-raj-m/mysite",
   },
+  {
+    title: "Directional Stock Price Prediction Using News Data",
+    image: project5,
+    description: `Built predictive models using news sentiment analysis for stock price direction forecasting. Compared ML (SVM, Logistic Regression, XGBoost) and DL models (FinBERT) with over 87,000 articles for Amazon and Apple.`,
+    technologies: ["Python", "Transformers", "FinBERT", "Sentiment Analysis"],
+    github: "https://github.com/Harshith-N-Srivatsa/Bi-Directional-Stock-Prediction",
+  },
+  
 ];
 
 
 
 export const CONTACT = {
-  address: "767 Fifth Avenue, New York, NY 10153 ",
+  address: "1009 E Univeristy Dr, Tempe AZ 85288 ",
   phoneNo: "+1 (602) 394 2178",
-  email: "me@example.com",
+  email: "pmohanr4@asu.edu",
   linkedIn: "https://www.linkedin.com/in/praveenraj-m/",
 };
