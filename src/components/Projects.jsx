@@ -44,7 +44,7 @@ const Projects = () => {
                       spotlightColor="rgba(0, 229, 255, 0.2)"
                     >
                       <div
-                        className={`relative h-[450px] lg:h-[575px] transition-transform duration-500 transform-style preserve-3d ${
+                        className={`relative h-[550px] lg:h-[575px] transition-transform duration-500 transform-style preserve-3d ${
                           flipped === index ? "rotate-y-180" : ""
                         }`}
                       >
