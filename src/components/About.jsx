@@ -82,8 +82,8 @@ const About = () => {
                 development.
                 <br />
                 <br /> As part of my projects, I deploy and maintain
-                web applications, built dashboards, automated pipelines, and
-                built AI solutions to improve performance and efficiency.
+                web applications, build dashboards, automate pipelines, and
+                build AI solutions to improve performance and efficiency.
                 <br />
                 <br />
                 Albert Einstein once said,{" "}
