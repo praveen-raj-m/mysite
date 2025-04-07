@@ -81,7 +81,7 @@ const About = () => {
                 University, specializing in AI, machine learning, and full-stack
                 development.
                 <br />
-                <br /> As part of my projects, I have deployed and maintained
+                <br /> As part of my projects, I deploy and maintain
                 web applications, built dashboards, automated pipelines, and
                 built AI solutions to improve performance and efficiency.
                 <br />
