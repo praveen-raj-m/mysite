@@ -3,6 +3,7 @@ import project2 from "../assets/projects/project-2.png";
 import project3 from "../assets/projects/project-3.png";
 import project4 from "../assets/projects/project-4.png";
 import project5 from "../assets/projects/Project-5.png";
+import project6 from "../assets/projects/Project6.png";
 
 
 export const HERO_CONTENT = 'I am a Computer Science student experienced in Data Analysis and Full stack Development.  I love creating tools that make a difference in people’s lives. I adapt quickly to new technologies and enjoy diving into the latest trends, constantly learning and growing. For me, it’s not just about building, it’s about creating productive applications. Let’s create something amazing together!';
@@ -153,6 +154,13 @@ export const PROJECTS = [
     description: `Built predictive models using news sentiment analysis for stock price direction forecasting. Compared ML (SVM, Logistic Regression, XGBoost) and DL models (FinBERT) with over 87,000 articles for Amazon and Apple.`,
     technologies: ["Python", "Transformers", "FinBERT", "Sentiment Analysis"],
     github: "https://github.com/Harshith-N-Srivatsa/Bi-Directional-Stock-Prediction",
+  },
+  {
+    title: "Context-Aware SQL Query Validation with MCP",
+    image: project6,
+    description: `Developed a Retrieval-Augmented Generation (RAG) system with Model Context Protocol (MCP) for schema-aware SQL query validation. Integrated live schema syncing, hallucination filtering, and SQL safety checks for LLM-generated queries.`,
+    technologies: ["Python", "SQLite", "LLMs", "RAG", "Regex", "MCP"],
+    github: "https://github.com/praveen-raj-m/sql-rag",
   },
   
 ];
