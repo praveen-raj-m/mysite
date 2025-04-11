@@ -66,16 +66,6 @@ const About = () => {
               animate="visible"
             >
               <p className="my-2 text-l text-justify lg:text-2xl py-4">
-                Currently, I'm leading the development of the{" "}
-                <u>
-                  <a href="https://piee.eec.asu.edu">PIEE database</a>
-                </u>
-                , at the Energy Efficiency Center at ASU supported by{" "}
-                <u>
-                  <a href="https://www.usaid.gov/">USAID</a>
-                </u>{" "}
-                to help manufacturers and researchers across America.
-                <br />
                 <br />
                 I’m pursuing my Master’s in Computer Science at Arizona State
                 University, specializing in AI, machine learning, and full-stack
