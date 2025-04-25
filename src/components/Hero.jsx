@@ -70,7 +70,7 @@ const Hero = () => {
                 animate="visible"
                 className="bg-gradient-to-r from-blue-200 via-blue-500 to-blue-600 bg-clip-text text-2xl lg:text-4xl tracking-tight text-transparent"
               >
-                Data Analyst | Developer
+                Data Analyst | AI Developer
               </motion.span>
 
               <motion.p

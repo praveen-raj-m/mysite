@@ -150,14 +150,21 @@ export const PROJECTS = [
     ],
     github: "https://github.com/praveen-raj-m/satellite-imagery-classification",
   },
-
   {
-    title: "Portfolio Website",
-    image: project4,
-    description: `Developed a personal portfolio website using ReactJS, showcasing projects, skills, and experiences. Integrated animations and styled the site with Tailwind CSS for a modern and responsive design.`,
-    technologies: ["ReactJS", "TailwindCSS", "JavaScript", "React Animations"],
-    github: "https://github.com/praveen-raj-m/mysite",
+    title: "Intelligent Compliance Assistant with MCP",
+    image: project4, // (replace with your project image)
+    description: `Built a local Retrieval-Augmented Generation (RAG) system for querying regulations and comparing company policies. Integrated Model Context Protocol (MCP) to minimize hallucinations and ensure traceable compliance validations.`,
+    technologies: ["Python", "React", "Ollama", "Qdrant", "LLMs", "RAG", "MCP"],
+    github: "https://github.com/praveen-raj-m/compliance-ai", // (replace if different)
   },
+
+  // {
+  //   title: "Portfolio Website",
+  //   image: project4,
+  //   description: `Developed a personal portfolio website using ReactJS, showcasing projects, skills, and experiences. Integrated animations and styled the site with Tailwind CSS for a modern and responsive design.`,
+  //   technologies: ["ReactJS", "TailwindCSS", "JavaScript", "React Animations"],
+  //   github: "https://github.com/praveen-raj-m/mysite",
+  // },
   {
     title: "Directional Stock Price Prediction Using News Data",
     image: project5,
