@@ -223,3 +223,63 @@ namespace OrderManagerApp.Views
         }
     }
 }
+
+
+
+
+using System.Collections.Generic;
+using System.ComponentModel;
+using System.Windows;
+using OrderManagerApp.Models; // Replace with your actual namespace
+
+namespace OrderManagerApp.Views
+{
+    public partial class OrderEditView : Window, INotifyPropertyChanged
+    {
+        private List<Order> _orderList;
+        private int _currentIndex;
+
+        public Order Order => _orderList[_currentIndex]; // Currently selected order
+
+        public OrderEditView(List<Order> orders, int startIndex)
+        {
+            InitializeComponent();
+
+            _orderList = orders;
+            _currentIndex = startIndex;
+
+            DataContext = this;
+        }
+
+        private void Next_Click(object sender, RoutedEventArgs e)
+        {
+            if (_currentIndex < _orderList.Count - 1)
+            {
+                _currentIndex++;
+                OnPropertyChanged("Order");
+            }
+        }
+
+        private void Previous_Click(object sender, RoutedEventArgs e)
+        {
+            if (_currentIndex > 0)
+            {
+                _currentIndex--;
+                OnPropertyChanged("Order");
+            }
+        }
+
+        private void Close_Click(object sender, RoutedEventArgs e)
+        {
+            DialogResult = true;
+            Close();
+        }
+
+        public event PropertyChangedEventHandler PropertyChanged;
+        protected void OnPropertyChanged(string name)
+        {
+            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(name));
+        }
+    }
+}
+
