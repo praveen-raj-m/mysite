@@ -1,27 +1,85 @@
-<UserControl x:Class="OrderManagerApp.Views.OrdersView"
-             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
-             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
-             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-             xmlns:dxg="http://schemas.devexpress.com/winfx/2008/xaml/grid"
-             xmlns:vm="clr-namespace:OrderManagerApp.ViewModels"
-             mc:Ignorable="d">
+using DevExpress.Mvvm; // For DelegateCommand
+using System.Windows.Input;
 
-    <UserControl.DataContext>
-        <vm:OrdersViewModel/>
-    </UserControl.DataContext>
+public class OrdersViewModel : ViewModelBase
+{
+    private ObservableCollection<Order> _orders;
+    public ObservableCollection<Order> Orders
+    {
+        get => _orders;
+        set => SetProperty(ref _orders, value);
+    }
 
-    <Grid>
-        <StackPanel>
-            <dxg:GridControl ItemsSource="{Binding Orders}" AutoGenerateColumns="AddNew">
-                <dxg:GridControl.View>
-                    <dxg:TableView AllowEditing="True" AllowDeleting="True" AllowAddingNew="True" NewItemRowPosition="Top"/>
-                </dxg:GridControl.View>
-            </dxg:GridControl>
+    public ICommand SaveChangesCommand { get; }
 
-            <Button Content="Save Changes" Width="120" Margin="10"
-                    HorizontalAlignment="Right"
-                    Command="{Binding SaveCommand}"/>
-        </StackPanel>
-    </Grid>
-</UserControl>
+    private List<Order> _deletedOrders = new List<Order>();
+    private NorthwindEntities _context;
+
+    public OrdersViewModel()
+    {
+        _context = new NorthwindEntities();
+        SaveChangesCommand = new DelegateCommand(SaveChanges);
+        LoadOrders();
+    }
+
+    private void LoadOrders()
+    {
+        var ordersFromDb = _context.Orders.ToList();
+        Orders = new ObservableCollection<Order>(ordersFromDb);
+
+        // Track deleted rows manually
+        Orders.CollectionChanged += (s, e) =>
+        {
+            if (e.OldItems != null)
+            {
+                foreach (Order oldOrder in e.OldItems)
+                {
+                    if (oldOrder.OrderID != 0) // Make sure it's from DB
+                        _deletedOrders.Add(oldOrder);
+                }
+            }
+        };
+    }
+
+    private void SaveChanges()
+    {
+        foreach (var order in Orders)
+        {
+            if (order.OrderID == 0)
+            {
+                _context.Orders.Add(order); // New row
+            }
+            else
+            {
+                _context.Entry(order).State = System.Data.Entity.EntityState.Modified;
+            }
+        }
+
+        foreach (var deletedOrder in _deletedOrders)
+        {
+            _context.Entry(deletedOrder).State = System.Data.Entity.EntityState.Deleted;
+        }
+
+        _context.SaveChanges();
+
+        MessageBox.Show("Changes saved to database!");
+        _deletedOrders.Clear();
+    }
+}
+
+<StackPanel Orientation="Vertical">
+    <dxg:GridControl ItemsSource="{Binding Orders}" AutoGenerateColumns="AddNew">
+        <dxg:GridControl.View>
+            <dxg:TableView AllowEditing="True" AllowDeleting="True" AllowAddingNew="True" ShowGroupPanel="False" />
+        </dxg:GridControl.View>
+    </dxg:GridControl>
+
+    <Button Content="Save Changes"
+            Command="{Binding SaveChangesCommand}"
+            Margin="5"
+            Width="150"
+            HorizontalAlignment="Left"/>
+</StackPanel>
+
+
+
