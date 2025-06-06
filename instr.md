@@ -99,3 +99,73 @@ namespace YourAppNamespace.ViewModels
         }
     }
 }
+
+
+using System.Windows;
+using YourApp.Models; // Or wherever your Order model is
+
+namespace YourApp.Views
+{
+    public partial class OrderEditView : Window
+    {
+        public Order Order { get; set; }
+
+        public OrderEditView(Order order)
+        {
+            InitializeComponent();
+
+            // Clone if needed to allow cancel
+            Order = order;
+            DataContext = this;
+        }
+
+        private void Ok_Click(object sender, RoutedEventArgs e)
+        {
+            DialogResult = true;
+            Close();
+        }
+
+        private void Cancel_Click(object sender, RoutedEventArgs e)
+        {
+            DialogResult = false;
+            Close();
+        }
+    }
+}
+
+
+
+<Window x:Class="YourApp.Views.OrderEditView"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="Edit Order" Height="300" Width="400"
+        WindowStartupLocation="CenterScreen"
+        ResizeMode="NoResize"
+        WindowStyle="SingleBorderWindow">
+    
+    <Grid Margin="20">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+        </Grid.RowDefinitions>
+
+        <StackPanel Orientation="Vertical" Margin="0,0,0,10">
+            <TextBlock Text="Order ID:"/>
+            <TextBox Text="{Binding Order.OrderID}" IsReadOnly="True" Margin="0,5,0,10"/>
+            
+            <TextBlock Text="Customer ID:"/>
+            <TextBox Text="{Binding Order.CustomerID}" Margin="0,5,0,10"/>
+
+            <TextBlock Text="Order Date:"/>
+            <DatePicker SelectedDate="{Binding Order.OrderDate}" Margin="0,5,0,10"/>
+        </StackPanel>
+
+        <StackPanel Grid.Row="2" Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,10,0,0">
+            <Button Content="OK" Width="80" Margin="0,0,10,0" Click="Ok_Click"/>
+            <Button Content="Cancel" Width="80" Click="Cancel_Click"/>
+        </StackPanel>
+    </Grid>
+</Window>
+
+
