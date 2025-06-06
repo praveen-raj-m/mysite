@@ -82,4 +82,25 @@ public class OrdersViewModel : ViewModelBase
 </StackPanel>
 
 
+ // Reload data from the database
+    var freshOrders = _context.Orders.ToList();
+    Orders = new ObservableCollection<Order>(freshOrders);
+
+    // Reattach delete tracker to new collection
+    Orders.CollectionChanged += (s, e) =>
+    {
+        if (e.OldItems != null)
+        {
+            foreach (Order oldOrder in e.OldItems)
+            {
+                if (oldOrder.OrderID != 0)
+                    _deletedOrders.Add(oldOrder);
+            }
+        }
+    };
+
+    MessageBox.Show("Changes reverted. Data reloaded from the database.");
+
+
+
 
