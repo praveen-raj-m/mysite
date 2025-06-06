@@ -1,5 +1,5 @@
 // ------------------------
-// ✅ INSTRUCTIONS:
+// ✅ INSTRUCTIONS
 // ------------------------
 // 1. Create a new WPF .NET Framework project in Visual Studio 2022
 // 2. Add Entity Framework 6 via NuGet: Install-Package EntityFramework
