@@ -1,124 +1,101 @@
-using DevExpress.Mvvm; // For DelegateCommand
+using DevExpress.Mvvm;
+using System.Collections.ObjectModel;
+using System.Data.Entity;
+using System.Linq;
+using System.Windows;
 using System.Windows.Input;
+using System.Collections.Specialized;
+using System.Collections.Generic;
 
-public class OrdersViewModel : ViewModelBase
+namespace YourAppNamespace.ViewModels
 {
-    private ObservableCollection<Order> _orders;
-    public ObservableCollection<Order> Orders
+    public class OrdersViewModel : ViewModelBase
     {
-        get => _orders;
-        set => SetProperty(ref _orders, value);
-    }
+        private ObservableCollection<Order> _orders;
+        private NorthwindEntities _context;
+        private readonly List<Order> _deletedOrders;
 
-    public ICommand SaveChangesCommand { get; }
+        public ObservableCollection<Order> Orders
+        {
+            get => _orders;
+            set => SetProperty(ref _orders, value);
+        }
 
-    private List<Order> _deletedOrders = new List<Order>();
-    private NorthwindEntities _context;
+        public ICommand SaveChangesCommand { get; }
+        public ICommand RevertChangesCommand { get; }
 
-    public OrdersViewModel()
-    {
-        _context = new NorthwindEntities();
-        SaveChangesCommand = new DelegateCommand(SaveChanges);
-        LoadOrders();
-    }
+        public OrdersViewModel()
+        {
+            _context = new NorthwindEntities();
+            _deletedOrders = new List<Order>();
 
-    private void LoadOrders()
-    {
-        var ordersFromDb = _context.Orders.ToList();
-        Orders = new ObservableCollection<Order>(ordersFromDb);
+            SaveChangesCommand = new DelegateCommand(SaveChanges);
+            RevertChangesCommand = new DelegateCommand(RevertChanges);
 
-        // Track deleted rows manually
-        Orders.CollectionChanged += (s, e) =>
+            LoadOrders();
+        }
+
+        private void LoadOrders()
+        {
+            var ordersList = _context.Orders.ToList();
+            Orders = new ObservableCollection<Order>(ordersList);
+
+            Orders.CollectionChanged += OnOrdersCollectionChanged;
+        }
+
+        private void OnOrdersCollectionChanged(object sender, NotifyCollectionChangedEventArgs e)
         {
             if (e.OldItems != null)
             {
                 foreach (Order oldOrder in e.OldItems)
                 {
-                    if (oldOrder.OrderID != 0) // Make sure it's from DB
+                    if (oldOrder.OrderID != 0)
                         _deletedOrders.Add(oldOrder);
                 }
             }
-        };
-    }
-
-    private void SaveChanges()
-    {
-        foreach (var order in Orders)
-        {
-            if (order.OrderID == 0)
-            {
-                _context.Orders.Add(order); // New row
-            }
-            else
-            {
-                _context.Entry(order).State = System.Data.Entity.EntityState.Modified;
-            }
         }
 
-        foreach (var deletedOrder in _deletedOrders)
+        private void SaveChanges()
         {
-            _context.Entry(deletedOrder).State = System.Data.Entity.EntityState.Deleted;
+            // Track modified and added entities
+            foreach (var order in Orders)
+            {
+                if (order.OrderID == 0)
+                {
+                    _context.Orders.Add(order); // New order
+                }
+                else
+                {
+                    _context.Entry(order).State = EntityState.Modified; // Edited order
+                }
+            }
+
+            // Track deletions
+            foreach (var deleted in _deletedOrders)
+            {
+                _context.Entry(deleted).State = EntityState.Deleted;
+            }
+
+            _context.SaveChanges();
+            MessageBox.Show("Changes saved successfully.");
+
+            // Reload from DB to sync IDs and state
+            RevertChanges();
         }
 
-        _context.SaveChanges();
+        private void RevertChanges()
+        {
+            _deletedOrders.Clear();
 
-        MessageBox.Show("Changes saved to database!");
-        _deletedOrders.Clear();
+            _context.Dispose(); // Dispose old context
+            _context = new NorthwindEntities(); // Create fresh one
+
+            var freshOrders = _context.Orders.ToList();
+            Orders = new ObservableCollection<Order>(freshOrders);
+
+            Orders.CollectionChanged += OnOrdersCollectionChanged;
+
+            MessageBox.Show("Reverted. All unsaved changes have been discarded.");
+        }
     }
 }
-
-<StackPanel Orientation="Vertical">
-    <dxg:GridControl ItemsSource="{Binding Orders}" AutoGenerateColumns="AddNew">
-        <dxg:GridControl.View>
-            <dxg:TableView AllowEditing="True" AllowDeleting="True" AllowAddingNew="True" ShowGroupPanel="False" />
-        </dxg:GridControl.View>
-    </dxg:GridControl>
-
-    <Button Content="Save Changes"
-            Command="{Binding SaveChangesCommand}"
-            Margin="5"
-            Width="150"
-            HorizontalAlignment="Left"/>
-</StackPanel>
-
-
- // Reload data from the database
-    var freshOrders = _context.Orders.ToList();
-    Orders = new ObservableCollection<Order>(freshOrders);
-
-    // Reattach delete tracker to new collection
-    Orders.CollectionChanged += (s, e) =>
-    {
-        if (e.OldItems != null)
-        {
-            foreach (Order oldOrder in e.OldItems)
-            {
-                if (oldOrder.OrderID != 0)
-                    _deletedOrders.Add(oldOrder);
-            }
-        }
-    };
-
-    MessageBox.Show("Changes reverted. Data reloaded from the database.");
-
-
-  var context = new NorthwindEntities(); // Use fresh context
-    var freshOrders = context.Orders.ToList();
-
-    Orders = new ObservableCollection<Order>(freshOrders); // Replace completely
-
-    // Reattach deletion tracking
-    Orders.CollectionChanged += (s, e) =>
-    {
-        if (e.OldItems != null)
-        {
-            foreach (Order oldOrder in e.OldItems)
-            {
-                if (oldOrder.OrderID != 0)
-                    _deletedOrders.Add(oldOrder);
-            }
-        }
-    };
-
-    Me
-
