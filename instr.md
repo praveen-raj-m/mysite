@@ -169,3 +169,57 @@ namespace YourApp.Views
 </Window>
 
 
+
+
+
+
+
+
+using System.Windows;
+using System.Windows.Controls;
+using System.Windows.Input;
+using DevExpress.Xpf.Grid;
+using OrderManagerApp.Models;      // Adjust if your EDMX namespace is different
+using OrderManagerApp.ViewModels; // For OrdersViewModel
+using OrderManagerApp.Views;      // For OrderEditView
+
+namespace OrderManagerApp.Views
+{
+    public partial class OrdersView : UserControl
+    {
+        public OrdersView()
+        {
+            InitializeComponent();
+        }
+
+        private void OrdersGrid_MouseDoubleClick(object sender, MouseButtonEventArgs e)
+        {
+            var viewModel = DataContext as OrdersViewModel;
+            if (viewModel == null) return;
+
+            // Get selected order
+            if (ordersGrid.CurrentItem is Order selectedOrder)
+            {
+                // Clone selected order for safe editing
+                var editableCopy = new Order
+                {
+                    OrderID = selectedOrder.OrderID,
+                    CustomerID = selectedOrder.CustomerID,
+                    OrderDate = selectedOrder.OrderDate,
+                    ShipCountry = selectedOrder.ShipCountry
+                    // Add more properties if needed
+                };
+
+                var dialog = new OrderEditView(editableCopy);
+                if (dialog.ShowDialog() == true)
+                {
+                    // Update original object from dialog values
+                    selectedOrder.CustomerID = dialog.Order.CustomerID;
+                    selectedOrder.OrderDate = dialog.Order.OrderDate;
+                    selectedOrder.ShipCountry = dialog.Order.ShipCountry;
+                    // Update more fields if necessary
+                }
+            }
+        }
+    }
+}
