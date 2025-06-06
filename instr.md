@@ -102,5 +102,23 @@ public class OrdersViewModel : ViewModelBase
     MessageBox.Show("Changes reverted. Data reloaded from the database.");
 
 
+  var context = new NorthwindEntities(); // Use fresh context
+    var freshOrders = context.Orders.ToList();
 
+    Orders = new ObservableCollection<Order>(freshOrders); // Replace completely
+
+    // Reattach deletion tracking
+    Orders.CollectionChanged += (s, e) =>
+    {
+        if (e.OldItems != null)
+        {
+            foreach (Order oldOrder in e.OldItems)
+            {
+                if (oldOrder.OrderID != 0)
+                    _deletedOrders.Add(oldOrder);
+            }
+        }
+    };
+
+    Me
 
