@@ -1,198 +1,159 @@
-// ------------------------
-// ✅ INSTRUCTIONS
-// ------------------------
-// 1. Create a new WPF .NET Framework project in Visual Studio 2022
-// 2. Add Entity Framework 6 via NuGet: Install-Package EntityFramework
-// 3. Add DevExpress WPF 24.1 controls
-// 4. Add your Northwind EDMX: Right-click project > Add > New Item > Data > ADO.NET Entity Data Model
-//    - Choose EF Designer from Database
-//    - Connect to Northwind
-//    - Select only the "Orders" table
-//    - Name it NorthwindModel.edmx
-// 5. Add folders: Models, ViewModels, Views
-// 6. Place each class below in the appropriate folder
-// ------------------------
+Perfect. Based on your update:
 
-// --------------------------------------
-// 🧩 Models/OrderRepository.cs
-// --------------------------------------
-using System.Collections.ObjectModel;
-using System.Data.Entity;
-using System.Linq;
+### 🔄 Updated Requirements:
 
-namespace YourApp.Models
+* The **child grid appears only when a parent row is double-clicked**.
+* It **should be collapsible**, i.e., have a **close button** to hide it.
+* The **rest of the logic remains**: split total amount using percentages, dynamic rows, save only if total percentage is 100%.
+
+---
+
+## ✅ Key Changes to Implement:
+
+1. **Trigger child grid visibility on double-click.**
+2. **Add a boolean `IsChildVisible`** in the `ViewModel`.
+3. **Bind child section visibility to `IsChildVisible`.**
+4. **Add a close button to hide the child grid.**
+
+---
+
+## 🧠 ViewModel Changes (`MainViewModel.cs`)
+
+Add the `IsChildVisible` property and `CloseChildCommand`:
+
+```csharp
+private bool isChildVisible;
+public bool IsChildVisible
 {
-    public class OrderRepository
+    get => isChildVisible;
+    set
     {
-        private NorthwindEntities _context;
-
-        public ObservableCollection<Order> Orders { get; private set; }
-
-        public OrderRepository()
-        {
-            _context = new NorthwindEntities();
-            _context.Orders.Load();
-            Orders = _context.Orders.Local;
-        }
-
-        public void SaveChanges() => _context.SaveChanges();
-
-        public void AddOrder(Order order) => _context.Orders.Add(order);
-
-        public void RemoveOrder(Order order) => _context.Orders.Remove(order);
-
-        public void Reload() => _context = new NorthwindEntities();
+        isChildVisible = value;
+        OnPropertyChanged();
     }
 }
 
-// --------------------------------------
-// 🧠 ViewModels/OrdersViewModel.cs
-// --------------------------------------
-using DevExpress.Mvvm;
-using System.Collections.ObjectModel;
-using YourApp.Models;
+public ICommand ShowChildCommand { get; }
+public ICommand CloseChildCommand { get; }
 
-namespace YourApp.ViewModels
+public MainViewModel()
 {
-    public class OrdersViewModel : ViewModelBase
-    {
-        private readonly OrderRepository _repo;
-
-        public ObservableCollection<Order> Orders => _repo.Orders;
-
-        public OrdersViewModel()
-        {
-            _repo = new OrderRepository();
-        }
-
-        public void SaveAllChanges() => _repo.SaveChanges();
-
-        public void AddOrder(Order order) => _repo.AddOrder(order);
-
-        public void DeleteOrder(Order order) => _repo.RemoveOrder(order);
-
-        public void ResetChanges()
-        {
-            _repo.Reload();
-        }
-    }
+    // Existing...
+    ShowChildCommand = new RelayCommand<ParentItem>(ShowChildGrid);
+    CloseChildCommand = new RelayCommand(() => IsChildVisible = false);
 }
 
-// --------------------------------------
-// 🖼️ Views/OrdersView.xaml
-// --------------------------------------
-<dx:ThemedWindow x:Class="YourApp.Views.OrdersView"
-                 xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
-                 xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-                 xmlns:dx="http://schemas.devexpress.com/winfx/2008/xaml/core"
-                 xmlns:dxg="http://schemas.devexpress.com/winfx/2008/xaml/grid"
-                 xmlns:vm="clr-namespace:YourApp.ViewModels"
-                 Title="Orders" Width="1000" Height="600">
-    <dx:ThemedWindow.DataContext>
-        <vm:OrdersViewModel/>
-    </dx:ThemedWindow.DataContext>
+private void ShowChildGrid(ParentItem parent)
+{
+    SelectedParent = parent;
+    LoadChildItems();
+    IsChildVisible = true;
+}
+```
 
+---
+
+## 🖼️ XAML Changes (`MainWindow.xaml`)
+
+### 1. Add Double-Click Event to Parent Grid
+
+Replace the GridControl section for parent with:
+
+```xml
+<dxg:GridControl Grid.Row="0" ItemsSource="{Binding ParentItems}">
+    <dxg:GridControl.View>
+        <dxg:TableView ShowGroupPanel="False"
+                       AllowEditing="False"
+                       AutoWidth="True"
+                       RowDoubleClick="ParentGrid_RowDoubleClick"/>
+    </dxg:GridControl.View>
+</dxg:GridControl>
+```
+
+### 2. Code-Behind to Handle Double-Click (`MainWindow.xaml.cs`)
+
+```csharp
+private void ParentGrid_RowDoubleClick(object sender, DevExpress.Xpf.Grid.RowDoubleClickEventArgs e)
+{
+    if (e.Row != null && DataContext is MainViewModel vm && e.Row is ParentItem parent)
+    {
+        vm.ShowChildCommand.Execute(parent);
+    }
+}
+```
+
+---
+
+### 3. Bind Child Grid to `IsChildVisible`
+
+Wrap child section in a `Border` with `Visibility` bound to `IsChildVisible`:
+
+```xml
+<Border Grid.Row="1" Padding="10"
+        Background="#f2f2f2"
+        Visibility="{Binding IsChildVisible, Converter={StaticResource BoolToVisibilityConverter}}">
     <DockPanel>
-        <StackPanel DockPanel.Dock="Top" Orientation="Horizontal" Margin="5">
-            <Button Content="Save Changes" Padding="5" Margin="5" Click="OnSaveClick"/>
-            <Button Content="Undo Changes" Padding="5" Margin="5" Click="OnUndoClick"/>
-        </StackPanel>
+        <!-- Close Button -->
+        <Button Content="✖" DockPanel.Dock="Top" Width="25" Height="25"
+                HorizontalAlignment="Right"
+                Command="{Binding CloseChildCommand}"/>
 
-        <dxg:GridControl Name="grid" ItemsSource="{Binding Orders}" AutoGenerateColumns="AddNew">
+        <!-- Child Grid -->
+        <dxg:GridControl ItemsSource="{Binding ChildItems}" Margin="0,10,0,10">
             <dxg:GridControl.View>
-                <dxg:TableView CellDoubleClick="OnCellDoubleClick" AutoWidth="True" ShowGroupPanel="False"/>
+                <dxg:TableView ShowGroupPanel="False" />
             </dxg:GridControl.View>
+
+            <dxg:GridColumn FieldName="Category1" Header="List 1"/>
+            <dxg:GridColumn FieldName="Category2" Header="List 2"/>
+            <dxg:GridColumn FieldName="Category3" Header="List 3"/>
+            <dxg:GridColumn FieldName="Percentage" Header="%" />
+            <dxg:GridColumn FieldName="Amount" Header="Amount" ReadOnly="True"/>
+
+            <dxg:GridControl.TotalSummary>
+                <dxg:GridSummaryItem FieldName="Percentage" SummaryType="Sum"/>
+                <dxg:GridSummaryItem FieldName="Amount" SummaryType="Sum"/>
+            </dxg:GridControl.TotalSummary>
         </dxg:GridControl>
-    </DockPanel>
-</dx:ThemedWindow>
 
-// --------------------------------------
-// Views/OrdersView.xaml.cs
-// --------------------------------------
-using System.Windows;
-using YourApp.ViewModels;
-
-namespace YourApp.Views
-{
-    public partial class OrdersView : DevExpress.Xpf.Core.ThemedWindow
-    {
-        public OrdersView() => InitializeComponent();
-
-        private void OnSaveClick(object sender, RoutedEventArgs e)
-        {
-            if (DataContext is OrdersViewModel vm)
-                vm.SaveAllChanges();
-        }
-
-        private void OnUndoClick(object sender, RoutedEventArgs e)
-        {
-            if (DataContext is OrdersViewModel vm)
-                vm.ResetChanges();
-
-            MessageBox.Show("Changes have been reset.", "Reset", MessageBoxButton.OK, MessageBoxImage.Information);
-        }
-
-        private void OnCellDoubleClick(object sender, DevExpress.Xpf.Grid.CellClickEventArgs e)
-        {
-            if (DataContext is OrdersViewModel vm && e.Row is Order order)
-            {
-                var editor = new EditOrderWindow(order);
-                editor.ShowDialog();
-            }
-        }
-    }
-}
-
-// --------------------------------------
-// 🪟 Views/EditOrderWindow.xaml
-// --------------------------------------
-<Window x:Class="YourApp.Views.EditOrderWindow"
-        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
-        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-        Title="Edit Order" Height="300" Width="400">
-    <Grid Margin="10">
-        <StackPanel>
-            <StackPanel Orientation="Horizontal" Margin="0,5">
-                <TextBlock Text="Customer ID" Width="100"/>
-                <TextBox x:Name="txtCustomerID" Width="200" Text="{Binding CustomerID, UpdateSourceTrigger=PropertyChanged, ValidatesOnDataErrors=True, NotifyOnValidationError=True}" />
-            </StackPanel>
-            <StackPanel Orientation="Horizontal" Margin="0,5">
-                <TextBlock Text="Order Date" Width="100"/>
-                <DatePicker x:Name="dpOrderDate" Width="200" SelectedDate="{Binding OrderDate, UpdateSourceTrigger=PropertyChanged, ValidatesOnDataErrors=True, NotifyOnValidationError=True}" />
-            </StackPanel>
-            <TextBlock Foreground="Red" x:Name="errorBlock" Visibility="Collapsed" Text="Please fill in all fields."/>
-            <Button Content="Done" Margin="10" HorizontalAlignment="Right" Click="DoneClick"/>
+        <!-- Action Buttons -->
+        <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" Margin="10">
+            <Button Content="Add Row" Command="{Binding AddChildCommand}" Margin="5"/>
+            <Button Content="Save" Command="{Binding SaveCommand}" Margin="5"
+                    IsEnabled="{Binding TotalPercentage, Converter={StaticResource EqualTo100Converter}}"/>
         </StackPanel>
-    </Grid>
-</Window>
+    </DockPanel>
+</Border>
+```
 
-// --------------------------------------
-// Views/EditOrderWindow.xaml.cs
-// --------------------------------------
-using System;
-using System.Windows;
+---
 
-namespace YourApp.Views
-{
-    public partial class EditOrderWindow : Window
-    {
-        public EditOrderWindow(Order order)
-        {
-            InitializeComponent();
-            DataContext = order;
-        }
+### 4. Add `BoolToVisibilityConverter` in `App.xaml`
 
-        private void DoneClick(object sender, RoutedEventArgs e)
-        {
-            if (string.IsNullOrWhiteSpace(txtCustomerID.Text) || !dpOrderDate.SelectedDate.HasValue)
-            {
-                errorBlock.Visibility = Visibility.Visible;
-                return;
-            }
+```xml
+<Application.Resources>
+    <local:EqualTo100Converter x:Key="EqualTo100Converter"/>
+    <BooleanToVisibilityConverter x:Key="BoolToVisibilityConverter"/>
+</Application.Resources>
+```
 
-            errorBlock.Visibility = Visibility.Collapsed;
-            DialogResult = true;
-            Close();
-        }
-    }
-}
+---
+
+## ✅ UX Behavior Now:
+
+| Action                     | Result                     |
+| -------------------------- | -------------------------- |
+| Double-click on parent row | Loads and shows child grid |
+| Close (✖) button           | Hides the child grid       |
+| Add/Remove rows            | Updates total %            |
+| Save only enabled          | If total % == 100          |
+
+---
+
+Would you like the next step to be:
+
+* 🧵 Integrating this with **Entity Framework** to fetch/save child rows from the database?
+* 🎨 Improve UI with ComboBoxes for `Category1/2/3` and dynamic styling?
+* 💾 Show save confirmation/toast?
+
+Let me know!
