@@ -157,3 +157,106 @@ Would you like the next step to be:
 * 💾 Show save confirmation/toast?
 
 Let me know!
+
+
+
+
+Great question!
+
+The **`Amount` field** in each row of the child grid is **automatically calculated** based on the `Percentage` input and the **total amount from the selected parent row**.
+
+---
+
+## ✅ How It Works
+
+In the `ChildItem` class:
+
+```csharp
+public class ChildItem : INotifyPropertyChanged
+{
+    // These are your dropdown fields
+    public string Category1 { get; set; }
+    public string Category2 { get; set; }
+    public string Category3 { get; set; }
+
+    private double percentage;
+    public double Percentage
+    {
+        get => percentage;
+        set
+        {
+            if (percentage != value)
+            {
+                percentage = value;
+                OnPropertyChanged();
+                UpdateAmount();  // This is the key!
+            }
+        }
+    }
+
+    private double amount;
+    public double Amount
+    {
+        get => amount;
+        private set
+        {
+            amount = value;
+            OnPropertyChanged();
+        }
+    }
+
+    public double ParentTotal { get; set; }  // Injected when row is added
+
+    private void UpdateAmount()
+    {
+        Amount = Math.Round(ParentTotal * Percentage / 100.0, 2);
+    }
+
+    public event PropertyChangedEventHandler PropertyChanged;
+    protected void OnPropertyChanged([CallerMemberName] string name = null)
+    {
+        PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(name));
+    }
+}
+```
+
+---
+
+## 🔁 Flow Summary
+
+1. User types `20` in the **Percentage** column.
+2. `Percentage` setter calls `UpdateAmount()`.
+3. `UpdateAmount()` calculates:
+
+   ```
+   Amount = ParentTotal * (Percentage / 100)
+   ```
+
+   If `ParentTotal` = \$1500 and `Percentage` = 20, then:
+
+   ```
+   Amount = 1500 * (20 / 100) = $300
+   ```
+4. UI updates because of `OnPropertyChanged("Amount")`.
+
+---
+
+## 💡 When Is `ParentTotal` Set?
+
+In your ViewModel when you **add a child row**:
+
+```csharp
+ChildItems.Add(new ChildItem
+{
+    ParentTotal = SelectedParent.TotalAmount
+});
+```
+
+So the child knows how much the full amount is.
+
+---
+
+If you ever **change the parent row's total** after creating child rows, you should also **recalculate all the child row amounts** by calling `UpdateAmount()` for each row.
+
+Want that logic too?
+
