@@ -1,194 +1,71 @@
-Here’s a complete and clean **DevExpress WPF MVVM implementation** for your feature:
-
-> **Goal**: In a `GridControl` bound to `ContractTermBreakDownItem`, calculate `Percentage` based on `Fees` and `TotalFees` from a related `SelectedContractTerm`. When either `Fees` or `Percentage` changes, the other updates accordingly.
+Absolutely — here’s an enhanced **Gemma 3 prompt** that **includes short explanations** of each key term in the attribution report, guiding the model to use them correctly in the analysis.
 
 ---
 
-## 🔧 FILE 1: `ContractTermBreakDownItem.cs`
+### 🧠 **Enhanced Prompt for Gemma 3: Attribution Report Analysis with Definitions**
 
-This is your model (DTO) for each row in the breakdown table.
+You are a financial analyst. Analyze the following **performance attribution report** to determine how the portfolio performed relative to its benchmark using the **Brinson model**. Focus on **alpha generation**, especially in the context of an **upmarket**.
 
-```csharp
-using DevExpress.Mvvm;
-using System;
+---
 
-public class ContractTermBreakDownItem : ViewModelBase
-{
-    private decimal fees;
-    private double percentage;
+### 📘 **Term Definitions (Use these for your reasoning):**
 
-    // This will be set from the ViewModel
-    public ContractTermDTO ParentContractTerm { get; set; }
+* **Industry Sector**: The economic sector (e.g., Tech, Energy) being analyzed.
+* **Avg Wei Portfolio**: The average weight of the sector in the portfolio over the period.
+* **Total Return Portfolio**: The return of that sector in the portfolio.
+* **Weighted Ctrb - Portfolio**: The sector's contribution to the portfolio's total return.
+* **Avg Wei Benchmark**: The average weight of the sector in the benchmark index.
+* **Total Return Benchmark**: The return of that sector in the benchmark.
+* **Weighted Ctrb - Benchmark**: The sector's contribution to the benchmark's total return.
+* **Attribution Allocation**: Measures whether the manager over/underweighted the right sectors.
 
-    public decimal Fees
-    {
-        get => fees;
-        set
-        {
-            if (SetProperty(ref fees, value, nameof(Fees)))
-            {
-                if (ParentContractTerm?.TotalFees > 0)
-                {
-                    percentage = (double)(fees / ParentContractTerm.TotalFees) * 100;
-                    RaisePropertyChanged(nameof(Percentage));
-                }
-            }
-        }
-    }
+  > Formula: (Portfolio Weight - Benchmark Weight) × Benchmark Return
+* **Attribution Selection**: Measures stock-picking skill within sectors.
 
-    public double Percentage
-    {
-        get => percentage;
-        set
-        {
-            if (SetProperty(ref percentage, value, nameof(Percentage)))
-            {
-                if (ParentContractTerm?.TotalFees > 0)
-                {
-                    fees = Math.Round((decimal)(percentage / 100) * ParentContractTerm.TotalFees, 2);
-                    RaisePropertyChanged(nameof(Fees));
-                }
-            }
-        }
-    }
-}
+  > Formula: Benchmark Weight × (Portfolio Return - Benchmark Return)
+* **Total Management**: Total added value (alpha) from the manager.
+
+  > Equals Allocation + Selection (and possibly interaction).
+
+---
+
+### 🔍 **Instructions:**
+
+1. **Detect if it’s an upmarket** based on the table:
+
+   * If most `Total Return Benchmark` values are positive OR
+   * The sum of `Weighted Ctrb - Benchmark` is positive.
+
+2. **Summarize portfolio performance**:
+
+   * Compare portfolio and benchmark total contributions.
+   * Was alpha (total management effect) positive or negative?
+
+3. **Break down Attribution**:
+
+   * How much alpha came from Allocation vs. Selection?
+   * Did the manager overweight strong sectors or pick better stocks?
+
+4. **Highlight Key Sectors**:
+
+   * Which sectors contributed most to excess return?
+   * Which sectors detracted?
+
+5. **Conclude**:
+
+   * Was the alpha driven mainly by smart allocation, skilled selection, or both?
+   * Did the manager successfully capitalize on the upmarket trend?
+
+---
+
+📎 **Here is the attribution report table (insert below):**
+
+```
+[INSERT TABLE HERE]
 ```
 
----
-
-## 🔧 FILE 2: `ContractTermDTO.cs`
-
-This holds the total fees for the selected contract term.
-
-```csharp
-public class ContractTermDTO : ViewModelBase
-{
-    private decimal totalFees;
-
-    public decimal TotalFees
-    {
-        get => totalFees;
-        set => SetProperty(ref totalFees, value, nameof(TotalFees));
-    }
-
-    // You can add other properties as needed
-}
-```
+Return a structured response with bullet points and a summary paragraph explaining your findings.
 
 ---
 
-## 🔧 FILE 3: `ContractDetailsViewModel.cs`
-
-This is your main ViewModel for the view with the GridControl.
-
-```csharp
-using DevExpress.Mvvm;
-using System.Collections.ObjectModel;
-
-public class ContractDetailsViewModel : ViewModelBase
-{
-    public ObservableCollection<ContractTermBreakDownItem> ContractTermBreakDownList { get; set; }
-
-    private ContractTermDTO selectedContractTerm;
-    public ContractTermDTO SelectedContractTerm
-    {
-        get => selectedContractTerm;
-        set
-        {
-            if (SetProperty(ref selectedContractTerm, value, nameof(SelectedContractTerm)))
-            {
-                UpdateBreakDownItemsWithTotalFees();
-            }
-        }
-    }
-
-    public ContractDetailsViewModel()
-    {
-        ContractTermBreakDownList = new ObservableCollection<ContractTermBreakDownItem>();
-    }
-
-    private void UpdateBreakDownItemsWithTotalFees()
-    {
-        if (SelectedContractTerm == null) return;
-
-        foreach (var item in ContractTermBreakDownList)
-        {
-            item.ParentContractTerm = SelectedContractTerm;
-        }
-    }
-}
-```
-
----
-
-## 🔧 FILE 4: `ContractDetails.xaml` (View)
-
-Make sure the bindings are set correctly in the `GridControl`:
-
-```xml
-<dxg:GridControl ItemsSource="{Binding ContractTermBreakDownList}" AutoGenerateColumns="None">
-    <dxg:GridControl.Columns>
-        <dxg:GridColumn FieldName="Fees" Header="Fees" />
-        <dxg:GridColumn FieldName="Percentage" Header="Percentage" />
-    </dxg:GridControl.Columns>
-</dxg:GridControl>
-```
-
-✅ Users can now **edit Fees or Percentage**, and the other value will **auto-update** based on `TotalFees` from the selected contract term.
-
----
-
-## ✅ Final Checklist
-
-* `ContractTermBreakDownItem` uses DevExpress `ViewModelBase` and has `ParentContractTerm` reference.
-* Changes in one field update the other.
-* ViewModel populates `ParentContractTerm` when selection changes.
-* Bound to `GridControl` using MVVM.
-
-Would you also like a live validation or highlighting if `TotalPercentage` ≠ 100% across rows?
-
-
-
-using DevExpress.Mvvm;
-using System;
-
-public class ContractTermBreakDownItem : ViewModelBase
-{
-    private decimal fees;
-    private double percentage;
-
-    public ContractTermDTO ParentContractTerm { get; set; }
-
-    public decimal Fees
-    {
-        get => fees;
-        set
-        {
-            if (this.SetTrackPropertyAndNotify(ref fees, value, nameof(Fees)))
-            {
-                if (ParentContractTerm?.TotalFees > 0)
-                {
-                    percentage = (double)(fees / ParentContractTerm.TotalFees) * 100;
-                    this.NotifyPropertyChanged(nameof(Percentage));
-                }
-            }
-        }
-    }
-
-    public double Percentage
-    {
-        get => percentage;
-        set
-        {
-            if (this.SetTrackPropertyAndNotify(ref percentage, value, nameof(Percentage)))
-            {
-                if (ParentContractTerm?.TotalFees > 0)
-                {
-                    fees = Math.Round((decimal)(percentage / 100.0) * ParentContractTerm.TotalFees, 2);
-                    this.NotifyPropertyChanged(nameof(Fees));
-                }
-            }
-        }
-    }
-}
-
+Let me know if you want to include interaction effect, a benchmark name (e.g., S\&P 500), or tailor this for a Python-based automation.
