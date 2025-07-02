@@ -1,71 +1,11 @@
-Absolutely — here’s an enhanced **Gemma 3 prompt** that **includes short explanations** of each key term in the attribution report, guiding the model to use them correctly in the analysis.
-
----
-
-### 🧠 **Enhanced Prompt for Gemma 3: Attribution Report Analysis with Definitions**
-
-You are a financial analyst. Analyze the following **performance attribution report** to determine how the portfolio performed relative to its benchmark using the **Brinson model**. Focus on **alpha generation**, especially in the context of an **upmarket**.
-
----
-
-### 📘 **Term Definitions (Use these for your reasoning):**
-
-* **Industry Sector**: The economic sector (e.g., Tech, Energy) being analyzed.
-* **Avg Wei Portfolio**: The average weight of the sector in the portfolio over the period.
-* **Total Return Portfolio**: The return of that sector in the portfolio.
-* **Weighted Ctrb - Portfolio**: The sector's contribution to the portfolio's total return.
-* **Avg Wei Benchmark**: The average weight of the sector in the benchmark index.
-* **Total Return Benchmark**: The return of that sector in the benchmark.
-* **Weighted Ctrb - Benchmark**: The sector's contribution to the benchmark's total return.
-* **Attribution Allocation**: Measures whether the manager over/underweighted the right sectors.
-
-  > Formula: (Portfolio Weight - Benchmark Weight) × Benchmark Return
-* **Attribution Selection**: Measures stock-picking skill within sectors.
-
-  > Formula: Benchmark Weight × (Portfolio Return - Benchmark Return)
-* **Total Management**: Total added value (alpha) from the manager.
-
-  > Equals Allocation + Selection (and possibly interaction).
-
----
-
-### 🔍 **Instructions:**
-
-1. **Detect if it’s an upmarket** based on the table:
-
-   * If most `Total Return Benchmark` values are positive OR
-   * The sum of `Weighted Ctrb - Benchmark` is positive.
-
-2. **Summarize portfolio performance**:
-
-   * Compare portfolio and benchmark total contributions.
-   * Was alpha (total management effect) positive or negative?
-
-3. **Break down Attribution**:
-
-   * How much alpha came from Allocation vs. Selection?
-   * Did the manager overweight strong sectors or pick better stocks?
-
-4. **Highlight Key Sectors**:
-
-   * Which sectors contributed most to excess return?
-   * Which sectors detracted?
-
-5. **Conclude**:
-
-   * Was the alpha driven mainly by smart allocation, skilled selection, or both?
-   * Did the manager successfully capitalize on the upmarket trend?
-
----
-
-📎 **Here is the attribution report table (insert below):**
-
-```
-[INSERT TABLE HERE]
-```
-
-Return a structured response with bullet points and a summary paragraph explaining your findings.
-
----
-
-Let me know if you want to include interaction effect, a benchmark name (e.g., S\&P 500), or tailor this for a Python-based automation.
+| Command                         | Description                         |
+| ------------------------------- | ----------------------------------- |
+| `ollama run <model>`            | Run a model interactively           |
+| `ollama pull <model>`           | Download a model                    |
+| `ollama list`                   | List downloaded models              |
+| `ollama show <model>`           | Show metadata/config of a model     |
+| `ollama create <model>`         | Create a new model from a Modelfile |
+| `ollama copy <source> <target>` | Copy an existing model              |
+| `ollama push <model>`           | Push your model to Ollama registry  |
+| `ollama rm <model>`             | Delete a model                      |
+| `ollama help`                   | Show help                           |
