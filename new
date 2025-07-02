@@ -1,11 +1,28 @@
-| Command                         | Description                         |
-| ------------------------------- | ----------------------------------- |
-| `ollama run <model>`            | Run a model interactively           |
-| `ollama pull <model>`           | Download a model                    |
-| `ollama list`                   | List downloaded models              |
-| `ollama show <model>`           | Show metadata/config of a model     |
-| `ollama create <model>`         | Create a new model from a Modelfile |
-| `ollama copy <source> <target>` | Copy an existing model              |
-| `ollama push <model>`           | Push your model to Ollama registry  |
-| `ollama rm <model>`             | Delete a model                      |
-| `ollama help`                   | Show help                           |
+private bool ValidateBreakdownTotals()
+{
+    if (SelectedContractTerm == null || ContractTermBreakDownList == null)
+        return true;
+
+    decimal totalFees = ContractTermBreakDownList.Sum(i => i.Fees);
+    double totalPercentage = ContractTermBreakDownList.Sum(i => i.Percentage);
+
+    bool isValid = true;
+    string errorMessage = "";
+
+    if (Math.Round(totalPercentage, 2) != 100.0)
+    {
+        errorMessage += "Total percentage must equal 100%.\n";
+        isValid = false;
+    }
+
+    if (totalFees > SelectedContractTerm.TotalFees)
+    {
+        errorMessage += $"Total fees ({totalFees}) exceed allowed total ({SelectedContractTerm.TotalFees}).";
+        isValid = false;
+    }
+
+    if (!isValid)
+        DevExpress.XtraEditors.XtraMessageBox.Show(errorMessage, "Validation Error", MessageBoxButton.OK, MessageBoxImage.Error);
+
+    return isValid;
+}
