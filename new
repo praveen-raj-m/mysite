@@ -146,3 +146,49 @@ Make sure the bindings are set correctly in the `GridControl`:
 * Bound to `GridControl` using MVVM.
 
 Would you also like a live validation or highlighting if `TotalPercentage` ≠ 100% across rows?
+
+
+
+using DevExpress.Mvvm;
+using System;
+
+public class ContractTermBreakDownItem : ViewModelBase
+{
+    private decimal fees;
+    private double percentage;
+
+    public ContractTermDTO ParentContractTerm { get; set; }
+
+    public decimal Fees
+    {
+        get => fees;
+        set
+        {
+            if (this.SetTrackPropertyAndNotify(ref fees, value, nameof(Fees)))
+            {
+                if (ParentContractTerm?.TotalFees > 0)
+                {
+                    percentage = (double)(fees / ParentContractTerm.TotalFees) * 100;
+                    this.NotifyPropertyChanged(nameof(Percentage));
+                }
+            }
+        }
+    }
+
+    public double Percentage
+    {
+        get => percentage;
+        set
+        {
+            if (this.SetTrackPropertyAndNotify(ref percentage, value, nameof(Percentage)))
+            {
+                if (ParentContractTerm?.TotalFees > 0)
+                {
+                    fees = Math.Round((decimal)(percentage / 100.0) * ParentContractTerm.TotalFees, 2);
+                    this.NotifyPropertyChanged(nameof(Fees));
+                }
+            }
+        }
+    }
+}
+
