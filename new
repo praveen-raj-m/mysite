@@ -1,28 +1,101 @@
-private bool ValidateBreakdownTotals()
-{
-    if (SelectedContractTerm == null || ContractTermBreakDownList == null)
-        return true;
+Great question! If your **LLM output includes Markdown formatting** (like headers, bold, lists, etc.), you can **render that output as HTML in Angular** using either:
 
-    decimal totalFees = ContractTermBreakDownList.Sum(i => i.Fees);
-    double totalPercentage = ContractTermBreakDownList.Sum(i => i.Percentage);
+---
 
-    bool isValid = true;
-    string errorMessage = "";
+### ✅ Option 1: `marked` Library (Quick & Lightweight)
 
-    if (Math.Round(totalPercentage, 2) != 100.0)
-    {
-        errorMessage += "Total percentage must equal 100%.\n";
-        isValid = false;
-    }
+#### 1. Install:
 
-    if (totalFees > SelectedContractTerm.TotalFees)
-    {
-        errorMessage += $"Total fees ({totalFees}) exceed allowed total ({SelectedContractTerm.TotalFees}).";
-        isValid = false;
-    }
+```bash
+npm install marked
+```
 
-    if (!isValid)
-        DevExpress.XtraEditors.XtraMessageBox.Show(errorMessage, "Validation Error", MessageBoxButton.OK, MessageBoxImage.Error);
+#### 2. Component Setup:
 
-    return isValid;
+```ts
+// app.component.ts
+import { Component } from '@angular/core';
+import { marked } from 'marked';
+import { DomSanitizer, SafeHtml } from '@angular/platform-browser';
+
+@Component({
+  selector: 'app-root',
+  templateUrl: './app.component.html'
+})
+export class AppComponent {
+  llmMarkdownOutput: string = `
+# Section 1: Summary
+
+- **Difference**: YES
+- Details: This clause was reworded and shortened.
+
+## Section 2: Risk
+
+- Indemnification clause missing.
+`;
+
+  constructor(private sanitizer: DomSanitizer) {}
+
+  get renderedMarkdown(): SafeHtml {
+    const html = marked.parse(this.llmMarkdownOutput || '');
+    return this.sanitizer.bypassSecurityTrustHtml(html);
+  }
 }
+```
+
+#### 3. Template:
+
+```html
+<div class="llm-output-box" [innerHTML]="renderedMarkdown"></div>
+```
+
+#### 4. Styling (Optional):
+
+```css
+.llm-output-box {
+  padding: 1rem;
+  background: #f9f9f9;
+  border: 1px solid #ddd;
+  font-family: Arial, sans-serif;
+}
+.llm-output-box h1, .llm-output-box h2 {
+  margin-top: 1rem;
+}
+```
+
+---
+
+### ✅ Option 2: `ngx-markdown` (If You Prefer Angular Pipe Syntax)
+
+1. Install:
+
+```bash
+npm install ngx-markdown
+```
+
+2. In `app.module.ts`:
+
+```ts
+import { MarkdownModule } from 'ngx-markdown';
+
+@NgModule({
+  imports: [
+    MarkdownModule.forRoot()
+  ]
+})
+export class AppModule {}
+```
+
+3. In your component template:
+
+```html
+<markdown [data]="llmMarkdownOutput"></markdown>
+```
+
+---
+
+### 📌 Recommendation:
+
+For **rendering LLM responses with Markdown formatting**, `marked` is ideal for simplicity and flexibility, especially if you're already using `[innerHTML]` for other parts.
+
+Let me know if you'd like to plug this into your existing result panel in your app!
