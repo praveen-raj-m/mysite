@@ -1,110 +1,148 @@
+Here’s a complete and clean **DevExpress WPF MVVM implementation** for your feature:
 
-You are a legal document analyst AI.
+> **Goal**: In a `GridControl` bound to `ContractTermBreakDownItem`, calculate `Percentage` based on `Fees` and `TotalFees` from a related `SelectedContractTerm`. When either `Fees` or `Percentage` changes, the other updates accordingly.
 
-Your task is to compare two full legal agreements:
-1. The Template Agreement (our standard)
-2. The User Agreement (a variation we received)
+---
 
-Your goal:
-- Identify missing, added, reworded, or conflicting clauses
-- Focus on obligations, responsibilities, parties, payment terms, dates, and legal terminology
-- Include a summary of the overall similarity and any risks
+## 🔧 FILE 1: `ContractTermBreakDownItem.cs`
 
-Strict Rules:
-- ONLY use the text provided. Do not assume meaning.
-- Provide direct quotes from both documents.
-- DO NOT summarize loosely or invent content.
-- Mention Company Names
-Format your response like this:
+This is your model (DTO) for each row in the breakdown table.
 
-==================
-SECTION 1: Overview
+```csharp
+using DevExpress.Mvvm;
+using System;
 
-- Summary of key differences and alignment
+public class ContractTermBreakDownItem : ViewModelBase
+{
+    private decimal fees;
+    private double percentage;
 
-==================
-SECTION 2: Detailed Clause-Level Differences
+    // This will be set from the ViewModel
+    public ContractTermDTO ParentContractTerm { get; set; }
 
-- [Clause or Section Title]
-Template: “...”
-Agreement: “...”
-Difference: YES/NO - short explanation
+    public decimal Fees
+    {
+        get => fees;
+        set
+        {
+            if (SetProperty(ref fees, value, nameof(Fees)))
+            {
+                if (ParentContractTerm?.TotalFees > 0)
+                {
+                    percentage = (double)(fees / ParentContractTerm.TotalFees) * 100;
+                    RaisePropertyChanged(nameof(Percentage));
+                }
+            }
+        }
+    }
 
-==================
-SECTION 3: Final Risk Assessment
+    public double Percentage
+    {
+        get => percentage;
+        set
+        {
+            if (SetProperty(ref percentage, value, nameof(Percentage)))
+            {
+                if (ParentContractTerm?.TotalFees > 0)
+                {
+                    fees = Math.Round((decimal)(percentage / 100) * ParentContractTerm.TotalFees, 2);
+                    RaisePropertyChanged(nameof(Fees));
+                }
+            }
+        }
+    }
+}
+```
 
-- Are the differences risky?
-- Are key clauses missing (e.g. indemnity, liability)?
-- Suggest whether legal review is needed
+---
 
-==================
-SECTION 4: Highlight Titles for UI
+## 🔧 FILE 2: `ContractTermDTO.cs`
 
-- List only the clause titles with Difference: YES
-- Format as: Termination, Payment Terms, Scope
-- Do NOT add extra explanation or bullet points
+This holds the total fees for the selected contract term.
 
---- TEMPLATE AGREEMENT ---
-SERVICE AGREEMENT
+```csharp
+public class ContractTermDTO : ViewModelBase
+{
+    private decimal totalFees;
 
-This Service Agreement is entered into on January 1, 2024, by and between AlphaTech Solutions LLC (“Company”) and John Doe Enterprises (“Client”).
+    public decimal TotalFees
+    {
+        get => totalFees;
+        set => SetProperty(ref totalFees, value, nameof(TotalFees));
+    }
 
-1. Scope of Services
-The Company shall provide software development, deployment, and support services, including:
-- API integration
-- Cloud hosting configuration
-- Maintenance and bug fixes
+    // You can add other properties as needed
+}
+```
 
-2. Term
-This Agreement shall commence on January 1, 2024, and remain in effect for 12 months.
+---
 
-3. Payment Terms
-The Client agrees to pay a monthly fee of $5,000, due within 15 days of invoice.
+## 🔧 FILE 3: `ContractDetailsViewModel.cs`
 
-4. Confidentiality
-Both parties agree not to disclose any proprietary or confidential information.
+This is your main ViewModel for the view with the GridControl.
 
-5. Intellectual Property
-All software developed under this Agreement remains the property of the Company.
+```csharp
+using DevExpress.Mvvm;
+using System.Collections.ObjectModel;
 
-6. Indemnification
-Each party agrees to indemnify and hold the other harmless from any third-party claims.
+public class ContractDetailsViewModel : ViewModelBase
+{
+    public ObservableCollection<ContractTermBreakDownItem> ContractTermBreakDownList { get; set; }
 
-7. Termination
-Either party may terminate this Agreement with 30 days’ written notice.
+    private ContractTermDTO selectedContractTerm;
+    public ContractTermDTO SelectedContractTerm
+    {
+        get => selectedContractTerm;
+        set
+        {
+            if (SetProperty(ref selectedContractTerm, value, nameof(SelectedContractTerm)))
+            {
+                UpdateBreakDownItemsWithTotalFees();
+            }
+        }
+    }
 
-8. Governing Law
-This Agreement shall be governed by the laws of the State of New York.
+    public ContractDetailsViewModel()
+    {
+        ContractTermBreakDownList = new ObservableCollection<ContractTermBreakDownItem>();
+    }
 
-IN WITNESS WHEREOF, both parties have executed this Agreement as of the date first above written.
+    private void UpdateBreakDownItemsWithTotalFees()
+    {
+        if (SelectedContractTerm == null) return;
 
---- USER AGREEMENT ---
-SERVICE AGREEMENT
+        foreach (var item in ContractTermBreakDownList)
+        {
+            item.ParentContractTerm = SelectedContractTerm;
+        }
+    }
+}
+```
 
-This Agreement is made on January 10, 2024, by and between AlphaTech Solutions LLC (“Provider”) and JD & Co. (“Customer”).
+---
 
-1. Scope
-Provider will deliver backend development services and software testing.
+## 🔧 FILE 4: `ContractDetails.xaml` (View)
 
-2. Duration
-The contract begins January 10, 2024, and lasts 6 months, subject to renewal.
+Make sure the bindings are set correctly in the `GridControl`:
 
-3. Fees and Invoicing
-Customer shall pay $4,500 monthly, invoiced on the 1st of each month with a 30-day due period.
+```xml
+<dxg:GridControl ItemsSource="{Binding ContractTermBreakDownList}" AutoGenerateColumns="None">
+    <dxg:GridControl.Columns>
+        <dxg:GridColumn FieldName="Fees" Header="Fees" />
+        <dxg:GridColumn FieldName="Percentage" Header="Percentage" />
+    </dxg:GridControl.Columns>
+</dxg:GridControl>
+```
 
-4. Confidentiality
-Confidentiality will be maintained as long as this agreement remains in force.
+✅ Users can now **edit Fees or Percentage**, and the other value will **auto-update** based on `TotalFees` from the selected contract term.
 
-5. IP Rights
-All code written shall be jointly owned unless otherwise agreed.
+---
 
-6. Indemnification
-Each party agrees to indemnify the other for damages directly caused by its actions.
+## ✅ Final Checklist
 
-7. Termination Clause
-Termination requires 10 business days’ notice in writing.
+* `ContractTermBreakDownItem` uses DevExpress `ViewModelBase` and has `ParentContractTerm` reference.
+* Changes in one field update the other.
+* ViewModel populates `ParentContractTerm` when selection changes.
+* Bound to `GridControl` using MVVM.
 
-8. Legal Jurisdiction
-This Agreement shall be governed by the laws of the State of New York.
-
-SIGNED AND AGREED TO by both parties on the date indicated above.
+Would you also like a live validation or highlighting if `TotalPercentage` ≠ 100% across rows?
