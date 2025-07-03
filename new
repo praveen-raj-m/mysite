@@ -1,101 +1,55 @@
-Great question! If your **LLM output includes Markdown formatting** (like headers, bold, lists, etc.), you can **render that output as HTML in Angular** using either:
+You are a financial analyst.
+Analyze the following monthly performance attribution report using the Brinson attribution model to evaluate how the portfolio performed relative to its benchmark.
 
----
+Table Columns Provided:
 
-### ✅ Option 1: `marked` Library (Quick & Lightweight)
+Industry Code
 
-#### 1. Install:
+Portfolio Average Weight
 
-```bash
-npm install marked
-```
+Portfolio Total Return
 
-#### 2. Component Setup:
+Portfolio Weighted Contribution (Portfolio Wgtd Ctrb)
 
-```ts
-// app.component.ts
-import { Component } from '@angular/core';
-import { marked } from 'marked';
-import { DomSanitizer, SafeHtml } from '@angular/platform-browser';
+Benchmark Average Weight
 
-@Component({
-  selector: 'app-root',
-  templateUrl: './app.component.html'
-})
-export class AppComponent {
-  llmMarkdownOutput: string = `
-# Section 1: Summary
+Benchmark Total Return
 
-- **Difference**: YES
-- Details: This clause was reworded and shortened.
+Benchmark Weighted Contribution (Benchmark Wgtd Ctrb)
 
-## Section 2: Risk
+Variance Average Weight
 
-- Indemnification clause missing.
-`;
+Variance Total Return
 
-  constructor(private sanitizer: DomSanitizer) {}
+Variance Weighted Contribution (Variance Wgtd Ctrb)
 
-  get renderedMarkdown(): SafeHtml {
-    const html = marked.parse(this.llmMarkdownOutput || '');
-    return this.sanitizer.bypassSecurityTrustHtml(html);
-  }
-}
-```
+Attribution Selection
 
-#### 3. Template:
+Total Management
 
-```html
-<div class="llm-output-box" [innerHTML]="renderedMarkdown"></div>
-```
+Instructions: Write a clear, professional summary with no harsh language (do not use terms like "bad" or "poor"). Keep your answer within 500 words. Do not use markdown formatting.
 
-#### 4. Styling (Optional):
+Step-by-step instructions:
 
-```css
-.llm-output-box {
-  padding: 1rem;
-  background: #f9f9f9;
-  border: 1px solid #ddd;
-  font-family: Arial, sans-serif;
-}
-.llm-output-box h1, .llm-output-box h2 {
-  margin-top: 1rem;
-}
-```
+Market Direction
+Analyze the Benchmark Total Return column. If most returns are positive, state that the market was in an uptrend. Do this in a single line.
 
----
+Portfolio Performance Summary
+Compare the total (sum) of Portfolio Weighted Contributions with the total of Benchmark Weighted Contributions. Indicate whether the portfolio outperformed or underperformed the benchmark. State whether Total Management (alpha) across all sectors is positive or negative.
 
-### ✅ Option 2: `ngx-markdown` (If You Prefer Angular Pipe Syntax)
+Attribution Breakdown
+Break down the source of alpha:
 
-1. Install:
+Total Selection Effect is the sum of Attribution Selection.
 
-```bash
-npm install ngx-markdown
-```
+Allocation Effect is derived as: Allocation = Total Management - Attribution Selection.
+Determine whether most alpha came from Allocation or Selection.
+Explain whether the manager overweighted strong sectors or picked better-performing stocks within each sector.
 
-2. In `app.module.ts`:
+Key Sector Analysis
+Identify the two sectors with the highest Total Management values and explain why they performed well.
+Identify the two sectors with the lowest Total Management values and explain what caused the underperformance.
+In each case, state whether it was driven by Allocation (difference in weights × benchmark return) or Selection (benchmark weight × difference in returns).
 
-```ts
-import { MarkdownModule } from 'ngx-markdown';
-
-@NgModule({
-  imports: [
-    MarkdownModule.forRoot()
-  ]
-})
-export class AppModule {}
-```
-
-3. In your component template:
-
-```html
-<markdown [data]="llmMarkdownOutput"></markdown>
-```
-
----
-
-### 📌 Recommendation:
-
-For **rendering LLM responses with Markdown formatting**, `marked` is ideal for simplicity and flexibility, especially if you're already using `[innerHTML]` for other parts.
-
-Let me know if you'd like to plug this into your existing result panel in your app!
+Conclusion
+Summarize whether the overall alpha was driven mainly by smart sector allocation, skilled stock selection, or a combination of both.
