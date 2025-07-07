@@ -1,1 +1,83 @@
 
+Got it. Let’s now **refine the prompt** to reflect three key things:
+
+1. **Customer-centric perspective**: The tone should remain professional, insightful, and non-critical — ideal for client reports or senior stakeholders.
+
+2. **Deeper reading of nuances**: It should capture interesting cases, like when:
+
+   * The portfolio is overweight in a low-return sector but still performs well (maybe due to great selection).
+   * A sector has negative alpha but it’s due to tactical underweighting — which might be strategic.
+   * Variance patterns signal risk positioning or active tilts.
+
+3. **Encourage contextual insights**: Rather than just mechanical math, the model should *reason through* how portfolio decisions reflect investment judgment.
+
+---
+
+Here’s the **final revised plain-text prompt** for your use with **Gemma 3:27b** or any smart LLM:
+
+---
+
+You are a financial analyst.
+Analyze the following monthly performance attribution report using the Brinson attribution model. Your goal is to interpret the portfolio's performance relative to its benchmark and highlight key takeaways a client or stakeholder would care about.
+
+Table Columns Provided:
+
+* Industry Code
+* Portfolio Average Weight
+* Portfolio Total Return
+* Portfolio Weighted Contribution (Portfolio Wgtd Ctrb)
+* Benchmark Average Weight
+* Benchmark Total Return
+* Benchmark Weighted Contribution (Benchmark Wgtd Ctrb)
+* Variance Average Weight
+* Variance Total Return
+* Variance Weighted Contribution
+* Attribution Selection
+* Total Management
+
+Instructions: Write a clear, professional, client-friendly summary of up to 500 words. Use a positive, balanced tone — avoid words like "bad", "poor", or "failure". Focus on insights, not criticism. Do not use markdown formatting.
+
+Step-by-step instructions:
+
+1. Market Context
+   Based on the Benchmark Total Return values across sectors, determine if the overall market was in an uptrend or downtrend during the month. Mention this in one line.
+
+2. Portfolio Performance Overview
+   Compare the total (sum) of Portfolio Weighted Contributions to Benchmark Weighted Contributions. State whether the portfolio outperformed or underperformed the benchmark overall.
+   Then, evaluate Total Management Effect (alpha): is it positive or negative? Was it meaningful?
+
+3. Attribution Analysis – Allocation vs. Selection
+   Break down how the alpha was generated:
+
+* Attribution Selection is provided.
+* Derive Allocation Effect as: Allocation = Total Management - Selection.
+  State how much of the alpha came from Selection vs. Allocation.
+  Explain whether the manager generally overweighted high-performing sectors or added value through strong stock selection.
+
+4. Key Sector Insights
+   Identify the top two sectors with the highest Total Management values and explain what contributed to their outperformance.
+   Likewise, identify two sectors with the lowest or most negative Total Management.
+   In each case, analyze whether the result was due to sector positioning (Allocation), stock picking (Selection), or a combination.
+   Highlight any nuances — for example:
+
+* A sector was underweight but still added value.
+* A sector was overweight despite lower returns, possibly reflecting a strategic view.
+* Any unusual behavior in variance that signals deliberate risk-taking or tilts.
+
+5. Strategic Interpretation
+   Conclude by summarizing the overall story:
+
+* Was the alpha primarily driven by smart asset allocation, skilled stock selection, or both?
+* Did the manager appear to make intentional bets that paid off (or didn’t), or did results mostly follow the benchmark?
+
+Your analysis should be professional, empathetic, and thoughtful — designed to help the reader understand not just performance, but the decisions and reasoning behind it.
+
+---
+
+Let me know if you want this translated into:
+
+* A JSON schema for API-style usage
+* A pre-filled example with dummy values
+* Or integrated with a CSV/Excel parser in Python
+
+Would you like to extend this prompt to handle **multi-period** (rolling 3M, YTD) attribution next?
