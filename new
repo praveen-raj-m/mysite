@@ -1,84 +1,202 @@
-Thanks for the clarification! Since your `ViewModel` doesn’t use a constructor (possibly due to MEF `[Export]` and DevExpress `ApplicationViewModelBase` or `SettingsBasedViewModel`), you can initialize your command and set up logic in an **override of the `OnInitialize()` method** or similar lifecycle method provided by DevExpress MVVM or your custom framework base.
+// =====================
+// Root Folder Structure
+// =====================
+// AttributionInsightsApp/
+// ├── AttributionInsightsApp.csproj
+// ├── Program.cs
+// ├── Startup.cs (if .NET 5/6)
+// ├── Controllers/
+// │   └── AttributionController.cs
+// ├── Models/
+// │   ├── AttributionRow.cs
+// │   └── CsvInput.cs
+// ├── Services/
+// │   └── OllamaService.cs ✅
+// ├── ClientApp/ (Angular frontend)
+// │   ├── src/app/
+// │   │   ├── attribution/
+// │   │   │   ├── attribution.component.ts
+// │   │   │   ├── attribution.component.html
+// │   │   │   └── attribution.component.css
+// │   │   └── app.module.ts
+// │   └── proxy.conf.json
 
----
 
-### ✅ Step-by-Step Fix for ViewModel Without Constructor
-
-#### 1. **Define the Command Property**
-
-Place this in your `ContractDetailViewModel` class:
-
-```csharp
-public DelegateCommand<CellValueChangedEventArgs> FeesChangedCommand { get; private set; }
-```
-
----
-
-#### 2. **Initialize the Command**
-
-If you’re using `SettingsBasedViewModel` or `ApplicationViewModelBase`, override the proper initialization method.
-
-##### Option A: Use `OnInitialize()` (commonly available in DevExpress ViewModels)
-
-```csharp
-protected override void OnInitialize()
+// ========================
+// 1. Models/AttributionRow.cs
+// ========================
+namespace AttributionInsightsApp.Models
 {
-    base.OnInitialize();
-
-    FeesChangedCommand = new DelegateCommand<CellValueChangedEventArgs>(OnFeesChanged);
-}
-```
-
-##### Option B: Use a method like `Initialize()` or any custom setup pattern your codebase uses.
-
----
-
-#### 3. **Add the Validation Logic**
-
-```csharp
-private void OnFeesChanged(CellValueChangedEventArgs e)
-{
-    ValidateTotalFees();
-}
-
-private void ValidateTotalFees()
-{
-    decimal totalFees = Items?.Sum(i => i.Fees) ?? 0;
-
-    if (totalFees != ParentTotal)
+    public class AttributionRow
     {
-        IsTotalValid = false;
-        ErrorMessage = $"Total fees ({totalFees}) do not match expected total ({ParentTotal}).";
+        public string Sector { get; set; }
+        public double PortfolioWeight { get; set; }
+        public double PortfolioReturn { get; set; }
+        public double PortfolioCtrb { get; set; }
+        public double BenchmarkWeight { get; set; }
+        public double BenchmarkReturn { get; set; }
+        public double BenchmarkCtrb { get; set; }
+        public double VarianceWeight { get; set; }
+        public double VarianceReturn { get; set; }
+        public double VarianceCtrb { get; set; }
+        public double Allocation { get; set; }
+        public double Selection { get; set; }
+        public double TotalManagement => Allocation + Selection;
+        public double WeightVariance => PortfolioWeight - BenchmarkWeight;
     }
-    else
-    {
-        IsTotalValid = true;
-        ErrorMessage = string.Empty;
-    }
-
-    NotifyPropertyChanged(nameof(IsTotalValid));
-    NotifyPropertyChanged(nameof(ErrorMessage));
 }
-```
 
----
+// ========================
+// 2. Models/CsvInput.cs
+// ========================
+namespace AttributionInsightsApp.Models
+{
+    public class CsvInput
+    {
+        public string Csv { get; set; }
+    }
+}
 
-### 🧩 Binding Tip for XAML
+// ========================
+// 3. Services/OllamaService.cs
+// ========================
+using System.Net.Http;
+using System.Net.Http.Json;
+using System.Threading.Tasks;
 
-If you haven’t already added the `CellValueChanged` behavior to your `GridControl`:
+namespace AttributionInsightsApp.Services
+{
+    public class OllamaService
+    {
+        private readonly HttpClient _httpClient;
+        private const string OllamaUrl = "http://localhost:11434/api/generate";
 
-```xml
-<dxg:GridControl ItemsSource="{Binding Items}">
-    <dxmvvm:Interaction.Behaviors>
-        <dxmvvm:EventToCommand EventName="CellValueChanged"
-                               Command="{Binding FeesChangedCommand}"
-                               PassEventArgsToCommand="True"/>
-    </dxmvvm:Interaction.Behaviors>
+        public OllamaService(HttpClient httpClient)
+        {
+            _httpClient = httpClient;
+        }
 
-    <!-- View and Columns -->
-</dxg:GridControl>
-```
+        public async Task<string> GetLLMSummaryAsync(string userPrompt)
+        {
+            var request = new
+            {
+                model = "gemma:27b",
+                prompt = userPrompt,
+                stream = false
+            };
 
----
+            var response = await _httpClient.PostAsJsonAsync(OllamaUrl, request);
+            if (!response.IsSuccessStatusCode) return "LLM call failed.";
 
-Would you like help checking whether your base class supports `OnInitialize()` or if you need a custom setup hook? Just share the base class or ask and I’ll guide you.
+            var result = await response.Content.ReadFromJsonAsync<OllamaResponse>();
+            return result.response;
+        }
+
+        private class OllamaResponse
+        {
+            public string response { get; set; }
+        }
+    }
+}
+
+// ==============================
+// 4. Controllers/AttributionController.cs
+// ==============================
+using Microsoft.AspNetCore.Mvc;
+using AttributionInsightsApp.Models;
+using AttributionInsightsApp.Services;
+using System.Text;
+
+namespace AttributionInsightsApp.Controllers
+{
+    [ApiController]
+    [Route("api/[controller]")]
+    public class AttributionController : ControllerBase
+    {
+        private readonly OllamaService _ollamaService;
+
+        public AttributionController(OllamaService ollamaService)
+        {
+            _ollamaService = ollamaService;
+        }
+
+        [HttpPost("analyze-csv")]
+        public async Task<IActionResult> AnalyzeCsv([FromBody] CsvInput input)
+        {
+            var rows = ParseCsvToAttributionRows(input.Csv);
+            if (!rows.Any()) return BadRequest("Could not parse input.");
+
+            var sorted = rows.OrderByDescending(r => r.TotalManagement).ToList();
+            var top = sorted.Take(2).ToList();
+            var bottom = sorted.TakeLast(2).ToList();
+            var noteworthy = rows
+                .Where(r => Math.Abs(r.WeightVariance) > 0.05 && r.Selection > 0.1)
+                .Select(r => $"{r.Sector}: Over/Underweight with strong selection (+{r.Selection:F2})")
+                .ToList();
+
+            var sb = new StringBuilder();
+            sb.AppendLine("Top Sectors:");
+            top.ForEach(r => sb.AppendLine($"- {r.Sector}: TotalMgmt {r.TotalManagement:F2}, Alloc {r.Allocation:F2}, Sel {r.Selection:F2}"));
+            sb.AppendLine("Bottom Sectors:");
+            bottom.ForEach(r => sb.AppendLine($"- {r.Sector}: TotalMgmt {r.TotalManagement:F2}, Alloc {r.Allocation:F2}, Sel {r.Selection:F2}"));
+            sb.AppendLine("Noteworthy:");
+            noteworthy.ForEach(n => sb.AppendLine($"- {n}"));
+
+            // Now send to LLM
+            var prompt = $"You are a financial analyst. Based on this data:\n{sb.ToString()}\nWrite a client-friendly performance attribution summary.";
+            var response = await _ollamaService.GetLLMSummaryAsync(prompt);
+
+            return Ok(new { summary = response });
+        }
+
+        private List<AttributionRow> ParseCsvToAttributionRows(string csv)
+        {
+            var rows = new List<AttributionRow>();
+            var lines = csv.Split('\n', StringSplitOptions.RemoveEmptyEntries);
+            if (lines.Length <= 1) return rows;
+
+            foreach (var line in lines.Skip(1))
+            {
+                var cols = line.Split(',', StringSplitOptions.TrimEntries);
+                if (cols.Length < 12) continue;
+
+                try
+                {
+                    rows.Add(new AttributionRow
+                    {
+                        Sector = cols[0],
+                        PortfolioWeight = double.Parse(cols[1]),
+                        PortfolioReturn = double.Parse(cols[2]),
+                        PortfolioCtrb = double.Parse(cols[3]),
+                        BenchmarkWeight = double.Parse(cols[4]),
+                        BenchmarkReturn = double.Parse(cols[5]),
+                        BenchmarkCtrb = double.Parse(cols[6]),
+                        VarianceWeight = double.Parse(cols[7]),
+                        VarianceReturn = double.Parse(cols[8]),
+                        VarianceCtrb = double.Parse(cols[9]),
+                        Allocation = double.Parse(cols[10]),
+                        Selection = double.Parse(cols[11])
+                    });
+                }
+                catch { continue; }
+            }
+
+            return rows;
+        }
+    }
+}
+
+// ==============================
+// 5. Program.cs (for .NET 6/7/8)
+// ==============================
+var builder = WebApplication.CreateBuilder(args);
+builder.Services.AddControllers();
+builder.Services.AddEndpointsApiExplorer();
+builder.Services.AddSwaggerGen();
+builder.Services.AddHttpClient<OllamaService>();
+
+var app = builder.Build();
+app.UseHttpsRedirection();
+app.UseAuthorization();
+app.MapControllers();
+app.Run();
