@@ -75,3 +75,23 @@ You can update the `<pre>` block to make the output more readable if needed.
 ### 🔜 Want to send this prompt to your backend after processing?
 
 Let me know — I’ll help you hook up the POST request to your Ollama `.NET Web API`.
+
+
+
+<div class="input-section">
+  <textarea
+    rows="10"
+    cols="80"
+    [(ngModel)]="rawInput"
+    placeholder="Paste your CSV table here..."
+  ></textarea>
+  <br />
+
+  <button (click)="generatePrompt()">Generate Prompt</button>
+
+  <div *ngIf="prompt" class="prompt-output">
+    <h3>Generated JSON:</h3>
+    <pre>{{ prompt }}</pre>
+  </div>
+</div>
+
