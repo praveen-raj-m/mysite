@@ -1,14 +1,136 @@
-import { NgModule } from '@angular/core';
-import { BrowserModule } from '@angular/platform-browser';
-import { FormsModule } from '@angular/forms';
-import { HttpClientModule } from '@angular/common/http';
+Great decision! Splitting the app into two parts — **Angular frontend** and **ASP.NET Core backend**, communicating via **CORS** — gives you more flexibility and clearer separation of concerns.
 
-import { AppComponent } from './app.component';
+Let’s do this **cleanly and step-by-step**, ensuring:
 
-@NgModule({
-  declarations: [AppComponent],
-  imports: [BrowserModule, FormsModule, HttpClientModule],
-  providers: [],
-  bootstrap: [AppComponent]
-})
-export class AppModule { }
+* Angular runs on `http://localhost:4200` (via `ng serve`)
+* Backend runs on `http://localhost:5000`
+* CORS is enabled so they talk without `404` or `CORS` errors
+
+---
+
+## ✅ Final Setup Summary
+
+| Component | Location                              | Port                    | Start Command                           |
+| --------- | ------------------------------------- | ----------------------- | --------------------------------------- |
+| Backend   | `angularapp_promptengineering.server` | `http://localhost:5000` | `dotnet run`                            |
+| Frontend  | `angularapp_promptengineering.client` | `http://localhost:4200` | `ng serve --proxy-config` ✅ recommended |
+
+---
+
+## ✅ 1. Set Up the Backend (ASP.NET Core)
+
+### 🔧 A. Enable CORS in `Program.cs`
+
+In `angularapp_promptengineering.server/Program.cs`, add:
+
+```csharp
+var builder = WebApplication.CreateBuilder(args);
+
+builder.Services.AddControllers();
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy("AllowFrontend",
+        policy =>
+        {
+            policy.WithOrigins("http://localhost:4200")
+                  .AllowAnyHeader()
+                  .AllowAnyMethod();
+        });
+});
+
+var app = builder.Build();
+
+app.UseCors("AllowFrontend"); // 👈 Apply CORS here
+app.UseRouting();
+app.UseAuthorization();
+app.MapControllers();
+app.Run();
+```
+
+✅ This allows Angular at `localhost:4200` to call your API.
+
+---
+
+### 🔧 B. Optional: Use Only HTTP
+
+In `launchSettings.json`:
+
+```json
+"applicationUrl": "http://localhost:5000"
+```
+
+Then run:
+
+```bash
+cd angularapp_promptengineering.server
+dotnet run
+```
+
+Confirm it says:
+
+```
+Now listening on: http://localhost:5000
+```
+
+---
+
+## ✅ 2. Set Up the Frontend (Angular)
+
+You can either use **a proxy** (recommended), or call the full API URL from Angular.
+
+---
+
+### 🔧 A. Create `proxy.conf.json` in `angularapp_promptengineering.client`
+
+```json
+{
+  "/api": {
+    "target": "http://localhost:5000",
+    "secure": false,
+    "changeOrigin": true,
+    "logLevel": "debug"
+  }
+}
+```
+
+---
+
+### 🔧 B. Update Angular HTTP Calls
+
+Use `/api/...` (with leading slash):
+
+```ts
+this.http.post<any>('/api/attribution/generate-prompt', { csv: this.csvText })
+```
+
+---
+
+### 🔧 C. Serve Angular with Proxy
+
+```bash
+cd angularapp_promptengineering.client
+ng serve --proxy-config proxy.conf.json
+```
+
+Angular now runs on `http://localhost:4200`
+All `/api/...` requests are forwarded to `http://localhost:5000`
+
+---
+
+## ✅ 3. Test End-to-End
+
+* Open: `http://localhost:4200`
+* Paste CSV and click “Generate Prompt”
+* Watch console/network: you should see successful `POST http://localhost:5000/api/attribution/generate-prompt`
+* No 404s, no CORS errors
+
+---
+
+## ✅ Done!
+
+Would you like me to send:
+
+* A zipped copy of the updated backend and frontend code split this way?
+* Or help you add `generate-commentary`, model dropdown, temp slider next?
+
+Let’s keep building!
