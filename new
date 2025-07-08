@@ -200,3 +200,287 @@ app.UseHttpsRedirection();
 app.UseAuthorization();
 app.MapControllers();
 app.Run();
+
+
+
+
+
+
+
+
+// =====================
+// Root Folder Structure
+// =====================
+// AttributionInsightsApp/
+// ├── AttributionInsightsApp.csproj
+// ├── Program.cs
+// ├── Startup.cs (if .NET 5/6)
+// ├── Controllers/
+// │   └── AttributionController.cs
+// ├── Models/
+// │   ├── AttributionRow.cs
+// │   └── CsvInput.cs
+// ├── Services/
+// │   └── OllamaService.cs ✅
+// ├── ClientApp/ (Angular frontend)
+// │   ├── src/app/
+// │   │   ├── attribution/
+// │   │   │   ├── attribution.component.ts
+// │   │   │   ├── attribution.component.html
+// │   │   │   └── attribution.component.css
+// │   │   └── app.module.ts
+// │   └── proxy.conf.json
+
+
+// ========================
+// 1. Models/AttributionRow.cs
+// ========================
+namespace AttributionInsightsApp.Models
+{
+    public class AttributionRow
+    {
+        public string Sector { get; set; }
+        public double PortfolioWeight { get; set; }
+        public double PortfolioReturn { get; set; }
+        public double PortfolioCtrb { get; set; }
+        public double BenchmarkWeight { get; set; }
+        public double BenchmarkReturn { get; set; }
+        public double BenchmarkCtrb { get; set; }
+        public double VarianceWeight { get; set; }
+        public double VarianceReturn { get; set; }
+        public double VarianceCtrb { get; set; }
+        public double Allocation { get; set; }
+        public double Selection { get; set; }
+        public double TotalManagement => Allocation + Selection;
+        public double WeightVariance => PortfolioWeight - BenchmarkWeight;
+    }
+}
+
+// ========================
+// 2. Models/CsvInput.cs
+// ========================
+namespace AttributionInsightsApp.Models
+{
+    public class CsvInput
+    {
+        public string Csv { get; set; }
+    }
+}
+
+// ========================
+// 3. Services/OllamaService.cs
+// ========================
+using System.Net.Http;
+using System.Net.Http.Json;
+using System.Threading.Tasks;
+
+namespace AttributionInsightsApp.Services
+{
+    public class OllamaService
+    {
+        private readonly HttpClient _httpClient;
+        private const string OllamaUrl = "http://localhost:11434/api/generate";
+
+        public OllamaService(HttpClient httpClient)
+        {
+            _httpClient = httpClient;
+        }
+
+        public async Task<string> GetLLMSummaryAsync(string userPrompt)
+        {
+            var request = new
+            {
+                model = "gemma:27b",
+                prompt = userPrompt,
+                stream = false
+            };
+
+            var response = await _httpClient.PostAsJsonAsync(OllamaUrl, request);
+            if (!response.IsSuccessStatusCode) return "LLM call failed.";
+
+            var result = await response.Content.ReadFromJsonAsync<OllamaResponse>();
+            return result.response;
+        }
+
+        private class OllamaResponse
+        {
+            public string response { get; set; }
+        }
+    }
+}
+
+// ==============================
+// 4. Controllers/AttributionController.cs
+// ==============================
+using Microsoft.AspNetCore.Mvc;
+using AttributionInsightsApp.Models;
+using AttributionInsightsApp.Services;
+using System.Text;
+
+namespace AttributionInsightsApp.Controllers
+{
+    [ApiController]
+    [Route("api/[controller]")]
+    public class AttributionController : ControllerBase
+    {
+        private readonly OllamaService _ollamaService;
+
+        public AttributionController(OllamaService ollamaService)
+        {
+            _ollamaService = ollamaService;
+        }
+
+        [HttpPost("analyze-csv")]
+        public async Task<IActionResult> AnalyzeCsv([FromBody] CsvInput input)
+        {
+            var rows = ParseCsvToAttributionRows(input.Csv);
+            if (!rows.Any()) return BadRequest("Could not parse input.");
+
+            var sorted = rows.OrderByDescending(r => r.TotalManagement).ToList();
+            var top = sorted.Take(2).ToList();
+            var bottom = sorted.TakeLast(2).ToList();
+            var noteworthy = rows
+                .Where(r => Math.Abs(r.WeightVariance) > 0.05 && r.Selection > 0.1)
+                .Select(r => $"{r.Sector}: Over/Underweight with strong selection (+{r.Selection:F2})")
+                .ToList();
+
+            var sb = new StringBuilder();
+            sb.AppendLine("Top Sectors:");
+            top.ForEach(r => sb.AppendLine($"- {r.Sector}: TotalMgmt {r.TotalManagement:F2}, Alloc {r.Allocation:F2}, Sel {r.Selection:F2}"));
+            sb.AppendLine("Bottom Sectors:");
+            bottom.ForEach(r => sb.AppendLine($"- {r.Sector}: TotalMgmt {r.TotalManagement:F2}, Alloc {r.Allocation:F2}, Sel {r.Selection:F2}"));
+            sb.AppendLine("Noteworthy:");
+            noteworthy.ForEach(n => sb.AppendLine($"- {n}"));
+
+            // Now send to LLM
+            var prompt = $"You are a financial analyst. Based on this data:\n{sb.ToString()}\nWrite a client-friendly performance attribution summary.";
+            var response = await _ollamaService.GetLLMSummaryAsync(prompt);
+
+            return Ok(new { summary = response });
+        }
+
+        private List<AttributionRow> ParseCsvToAttributionRows(string csv)
+        {
+            var rows = new List<AttributionRow>();
+            var lines = csv.Split('\n', StringSplitOptions.RemoveEmptyEntries);
+            if (lines.Length <= 1) return rows;
+
+            foreach (var line in lines.Skip(1))
+            {
+                var cols = line.Split(',', StringSplitOptions.TrimEntries);
+                if (cols.Length < 12) continue;
+
+                try
+                {
+                    rows.Add(new AttributionRow
+                    {
+                        Sector = cols[0],
+                        PortfolioWeight = double.Parse(cols[1]),
+                        PortfolioReturn = double.Parse(cols[2]),
+                        PortfolioCtrb = double.Parse(cols[3]),
+                        BenchmarkWeight = double.Parse(cols[4]),
+                        BenchmarkReturn = double.Parse(cols[5]),
+                        BenchmarkCtrb = double.Parse(cols[6]),
+                        VarianceWeight = double.Parse(cols[7]),
+                        VarianceReturn = double.Parse(cols[8]),
+                        VarianceCtrb = double.Parse(cols[9]),
+                        Allocation = double.Parse(cols[10]),
+                        Selection = double.Parse(cols[11])
+                    });
+                }
+                catch { continue; }
+            }
+
+            return rows;
+        }
+    }
+}
+
+// ==============================
+// 5. Program.cs (for .NET 6/7/8)
+// ==============================
+var builder = WebApplication.CreateBuilder(args);
+builder.Services.AddControllers();
+builder.Services.AddEndpointsApiExplorer();
+builder.Services.AddSwaggerGen();
+builder.Services.AddHttpClient<OllamaService>();
+
+var app = builder.Build();
+app.UseHttpsRedirection();
+app.UseAuthorization();
+app.MapControllers();
+app.Run();
+
+// ==============================
+// 6. ClientApp/src/app/attribution/attribution.component.ts
+// ==============================
+import { Component } from '@angular/core';
+import { HttpClient } from '@angular/common/http';
+
+@Component({
+  selector: 'app-attribution',
+  templateUrl: './attribution.component.html',
+  styleUrls: ['./attribution.component.css']
+})
+export class AttributionComponent {
+  csvText = '';
+  summary = '';
+
+  constructor(private http: HttpClient) {}
+
+  analyze() {
+    this.http.post<any>('/api/attribution/analyze-csv', { csv: this.csvText })
+      .subscribe(result => {
+        this.summary = result.summary;
+      });
+  }
+}
+
+// ==============================
+// 7. ClientApp/src/app/attribution/attribution.component.html
+// ==============================
+<h2>Paste Attribution CSV</h2>
+<textarea [(ngModel)]="csvText" rows="10" cols="100" placeholder="Paste CSV here..."></textarea>
+<br />
+<button (click)="analyze()">Analyze</button>
+
+<h3>LLM Summary</h3>
+<pre>{{ summary }}</pre>
+
+// ==============================
+// 8. ClientApp/src/app/app.module.ts
+// ==============================
+import { NgModule } from '@angular/core';
+import { BrowserModule } from '@angular/platform-browser';
+import { FormsModule } from '@angular/forms';
+import { HttpClientModule } from '@angular/common/http';
+
+import { AppComponent } from './app.component';
+import { AttributionComponent } from './attribution/attribution.component';
+
+@NgModule({
+  declarations: [AppComponent, AttributionComponent],
+  imports: [BrowserModule, FormsModule, HttpClientModule],
+  providers: [],
+  bootstrap: [AppComponent]
+})
+export class AppModule {}
+
+// ==============================
+// 9. ClientApp/proxy.conf.json
+// ==============================
+{
+  "/api": {
+    "target": "https://localhost:5001",
+    "secure": false
+  }
+}
+
+// ==============================
+// 10. Notes to Run Project
+// ==============================
+// ✅ Run backend in Visual Studio (launches ASP.NET Core API)
+// ✅ In terminal: cd ClientApp && npm install && ng serve --proxy-config proxy.conf.json
+// ✅ Navigate to http://localhost:4200 to access the Angular UI
+// ✅ Paste CSV, click Analyze, view summary from Ollama
+
