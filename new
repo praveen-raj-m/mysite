@@ -1,23 +1,30 @@
-✅ That’s a solid move — since the **WeatherForecast** API worked, let’s replicate its exact pattern to ensure your `PromptController` behaves the same way.
+Yes — you're absolutely right, and thank you for clarifying! 🙌
+
+When you use the **ASP.NET Core + Angular template in Visual Studio**, the project is split like this:
+
+```
+/YourSolution/
+├── /ClientApp/   <-- Angular frontend
+├── /Server/      <-- ASP.NET Core backend
+```
+
+So everything we’ve been discussing needs to be placed correctly inside the **`/Server`** folder — not the root.
 
 ---
 
-## ✅ Let’s Follow the Working WeatherForecast Example Exactly
+## ✅ Updated File Placement for Split Structure
 
-We'll do 3 things:
-
-1. **Match structure** of controller and model
-2. **Place files correctly**
-3. **Call API the same way**
+Here's exactly where your files should go:
 
 ---
 
-### ✅ Step 1: Create the Model (Like `WeatherForecast.cs`)
+### ✅ 1. `PromptResponse.cs`
 
-**📄 Create: `PromptResponse.cs` in root folder**
+**📄 Path:**
+`/Server/PromptResponse.cs`
 
 ```csharp
-namespace OllamaWrapperApp
+namespace Server
 {
     public class PromptResponse
     {
@@ -28,15 +35,17 @@ namespace OllamaWrapperApp
 
 ---
 
-### ✅ Step 2: Create the Controller (Match `WeatherForecastController.cs`)
+### ✅ 2. `PromptController.cs`
 
-**📄 Create: `PromptController.cs` in `/Controllers` folder**
+**📄 Path:**
+`/Server/Controllers/PromptController.cs`
 
 ```csharp
 using Microsoft.AspNetCore.Mvc;
 using System.Net.Http.Json;
+using System.Text.Json;
 
-namespace OllamaWrapperApp.Controllers
+namespace Server.Controllers
 {
     [ApiController]
     [Route("[controller]")]
@@ -78,59 +87,42 @@ namespace OllamaWrapperApp.Controllers
 }
 ```
 
-> ✅ Note: We return a list `IEnumerable<PromptResponse>` just like `WeatherForecastController` does.
-
 ---
 
-### ✅ Step 3: Rebuild and Run
+### 🔁 3. Rebuild and Run
+
+Now do:
 
 ```bash
+cd Server
 dotnet build
 dotnet run
 ```
 
-You should now have an endpoint:
+You should see:
 
 ```
-POST https://localhost:5001/prompt
-```
-
-Use **Postman** with:
-
-* **POST**
-* **URL**: `https://localhost:5001/prompt`
-* **Header**: `Content-Type: application/json`
-* **Body**:
-
-```json
-{
-  "prompt": "What is AI?"
-}
+Now listening on: https://localhost:5001
 ```
 
 ---
 
-## 🧠 Want to Try it in Browser First?
+### ✅ 4. Test in Postman
 
-Add this `GET` endpoint to test in browser (optional):
-
-```csharp
-[HttpGet]
-public IEnumerable<PromptResponse> Get()
-{
-    return new List<PromptResponse>
-    {
-        new PromptResponse { Response = "Prompt controller is working." }
-    };
-}
-```
-
-Then visit:
+**POST** to:
 
 ```
 https://localhost:5001/prompt
 ```
 
+**With Body:**
+
+```json
+{
+  "prompt": "What is machine learning?"
+}
+```
+
 ---
 
-Let me know once this works — then I’ll help you update your Angular code to match the new endpoint (`/prompt`).
+Would you like help adapting the Angular code inside `/ClientApp/src/app` to call this new `/prompt` endpoint now?
