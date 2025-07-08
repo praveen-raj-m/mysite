@@ -1,136 +1,230 @@
-Great decision! Splitting the app into two parts — **Angular frontend** and **ASP.NET Core backend**, communicating via **CORS** — gives you more flexibility and clearer separation of concerns.
+Great! Let’s create the **Ollama wrapper** using **Visual Studio** step by step with the following stack:
 
-Let’s do this **cleanly and step-by-step**, ensuring:
-
-* Angular runs on `http://localhost:4200` (via `ng serve`)
-* Backend runs on `http://localhost:5000`
-* CORS is enabled so they talk without `404` or `CORS` errors
+* **Angular frontend** (served from ASP.NET Core backend)
+* **ASP.NET Core Web API** backend
+* **Ollama model running locally** (you must run `ollama serve` separately)
 
 ---
 
-## ✅ Final Setup Summary
+## ✅ STEP 1: Create Project in Visual Studio
 
-| Component | Location                              | Port                    | Start Command                           |
-| --------- | ------------------------------------- | ----------------------- | --------------------------------------- |
-| Backend   | `angularapp_promptengineering.server` | `http://localhost:5000` | `dotnet run`                            |
-| Frontend  | `angularapp_promptengineering.client` | `http://localhost:4200` | `ng serve --proxy-config` ✅ recommended |
+### 🔹 1.1 Create a New Project
+
+1. Open **Visual Studio 2022**
+2. Click **Create a new project**
+3. Select **"ASP.NET Core with Angular"**
+4. Click **Next**
+
+### 🔹 1.2 Configure Project
+
+* Name: `OllamaWrapperApp`
+* Location: Choose a location
+* Framework: Choose **.NET 8 (Long-term support)**
+* Click **Create**
 
 ---
 
-## ✅ 1. Set Up the Backend (ASP.NET Core)
+## ✅ STEP 2: Project Structure
 
-### 🔧 A. Enable CORS in `Program.cs`
+Visual Studio will scaffold a project with:
 
-In `angularapp_promptengineering.server/Program.cs`, add:
+* `ClientApp/` → Angular code
+* `Controllers/WeatherForecastController.cs` → You will replace with your own `PromptController.cs`
+* `Program.cs` → Startup configuration
+* `appsettings.json`
+
+---
+
+## ✅ STEP 3: Create the Prompt API Backend
+
+### 🔹 3.1 Create a Request Model
+
+**📁 Models/PromptRequest.cs**
 
 ```csharp
-var builder = WebApplication.CreateBuilder(args);
-
-builder.Services.AddControllers();
-builder.Services.AddCors(options =>
+namespace OllamaWrapperApp.Models
 {
-    options.AddPolicy("AllowFrontend",
-        policy =>
+    public class PromptRequest
+    {
+        public string Prompt { get; set; }
+    }
+}
+```
+
+### 🔹 3.2 Create OllamaService
+
+**📁 Services/OllamaService.cs**
+
+```csharp
+using System.Net.Http.Json;
+
+namespace OllamaWrapperApp.Services
+{
+    public class OllamaService
+    {
+        private readonly HttpClient _httpClient;
+
+        public OllamaService(HttpClient httpClient)
         {
-            policy.WithOrigins("http://localhost:4200")
-                  .AllowAnyHeader()
-                  .AllowAnyMethod();
-        });
-});
+            _httpClient = httpClient;
+        }
 
+        public async Task<string> GeneratePromptAsync(string prompt)
+        {
+            var request = new
+            {
+                model = "llama3",
+                prompt = prompt
+            };
+
+            var response = await _httpClient.PostAsJsonAsync("http://localhost:11434/api/generate", request);
+            response.EnsureSuccessStatusCode();
+
+            var json = await response.Content.ReadFromJsonAsync<JsonElement>();
+            return json.GetProperty("response").GetString();
+        }
+    }
+}
+```
+
+### 🔹 3.3 Register OllamaService
+
+**📄 Program.cs**
+
+```csharp
+builder.Services.AddHttpClient<OllamaService>();
+```
+
+Add this just before:
+
+```csharp
 var app = builder.Build();
-
-app.UseCors("AllowFrontend"); // 👈 Apply CORS here
-app.UseRouting();
-app.UseAuthorization();
-app.MapControllers();
-app.Run();
 ```
 
-✅ This allows Angular at `localhost:4200` to call your API.
+### 🔹 3.4 Create the Controller
 
----
+**📁 Controllers/PromptController.cs**
 
-### 🔧 B. Optional: Use Only HTTP
+```csharp
+using Microsoft.AspNetCore.Mvc;
+using OllamaWrapperApp.Models;
+using OllamaWrapperApp.Services;
 
-In `launchSettings.json`:
-
-```json
-"applicationUrl": "http://localhost:5000"
-```
-
-Then run:
-
-```bash
-cd angularapp_promptengineering.server
-dotnet run
-```
-
-Confirm it says:
-
-```
-Now listening on: http://localhost:5000
-```
-
----
-
-## ✅ 2. Set Up the Frontend (Angular)
-
-You can either use **a proxy** (recommended), or call the full API URL from Angular.
-
----
-
-### 🔧 A. Create `proxy.conf.json` in `angularapp_promptengineering.client`
-
-```json
+namespace OllamaWrapperApp.Controllers
 {
-  "/api": {
-    "target": "http://localhost:5000",
-    "secure": false,
-    "changeOrigin": true,
-    "logLevel": "debug"
-  }
+    [ApiController]
+    [Route("api/[controller]")]
+    public class PromptController : ControllerBase
+    {
+        private readonly OllamaService _ollamaService;
+
+        public PromptController(OllamaService ollamaService)
+        {
+            _ollamaService = ollamaService;
+        }
+
+        [HttpPost("generate")]
+        public async Task<IActionResult> Generate([FromBody] PromptRequest request)
+        {
+            var result = await _ollamaService.GeneratePromptAsync(request.Prompt);
+            return Ok(new { response = result });
+        }
+    }
 }
 ```
 
 ---
 
-### 🔧 B. Update Angular HTTP Calls
+## ✅ STEP 4: Update Angular Frontend
 
-Use `/api/...` (with leading slash):
+### 🔹 4.1 Navigate to Angular App
 
-```ts
-this.http.post<any>('/api/attribution/generate-prompt', { csv: this.csvText })
-```
-
----
-
-### 🔧 C. Serve Angular with Proxy
+In terminal:
 
 ```bash
-cd angularapp_promptengineering.client
-ng serve --proxy-config proxy.conf.json
+cd ClientApp
+npm install
 ```
 
-Angular now runs on `http://localhost:4200`
-All `/api/...` requests are forwarded to `http://localhost:5000`
+### 🔹 4.2 Update `app.component.ts`
+
+**📁 ClientApp/src/app/app.component.ts**
+
+```ts
+import { Component } from '@angular/core';
+import { HttpClient } from '@angular/common/http';
+
+@Component({
+  selector: 'app-root',
+  templateUrl: './app.component.html',
+})
+export class AppComponent {
+  prompt = '';
+  response = '';
+
+  constructor(private http: HttpClient) {}
+
+  sendPrompt() {
+    this.http.post<any>('/api/prompt/generate', { prompt: this.prompt })
+      .subscribe(res => {
+        this.response = res.response;
+      });
+  }
+}
+```
+
+### 🔹 4.3 Update `app.component.html`
+
+**📁 ClientApp/src/app/app.component.html**
+
+```html
+<div style="padding: 20px;">
+  <h2>Ollama Prompt Wrapper</h2>
+  <textarea [(ngModel)]="prompt" rows="5" cols="50"></textarea><br><br>
+  <button (click)="sendPrompt()">Generate</button>
+  <h4>Response:</h4>
+  <pre>{{ response }}</pre>
+</div>
+```
+
+### 🔹 4.4 Import FormsModule
+
+**📁 ClientApp/src/app/app.module.ts**
+
+```ts
+import { FormsModule } from '@angular/forms';
+@NgModule({
+  ...
+  imports: [ BrowserModule, HttpClientModule, FormsModule ],
+  ...
+})
+```
 
 ---
 
-## ✅ 3. Test End-to-End
+## ✅ STEP 5: Run Ollama Server
 
-* Open: `http://localhost:4200`
-* Paste CSV and click “Generate Prompt”
-* Watch console/network: you should see successful `POST http://localhost:5000/api/attribution/generate-prompt`
-* No 404s, no CORS errors
+Make sure Ollama is running locally:
+
+```bash
+ollama serve
+ollama run llama3
+```
 
 ---
 
-## ✅ Done!
+## ✅ STEP 6: Run the Whole Project
 
-Would you like me to send:
+In **Visual Studio**:
 
-* A zipped copy of the updated backend and frontend code split this way?
-* Or help you add `generate-commentary`, model dropdown, temp slider next?
+* Press **F5** or click **"Run"**
+* This will:
 
-Let’s keep building!
+  * Launch ASP.NET Core backend
+  * Automatically build and serve Angular app from `ClientApp`
+* Go to `https://localhost:PORT/`
+* You should see the Angular interface and be able to type prompts and get responses!
+
+---
+
+Would you like me to create the full `launch.json` or walk you through how to debug both frontend + backend?
