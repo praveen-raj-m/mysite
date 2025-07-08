@@ -1,173 +1,136 @@
-Awesome! That means everything is working ✅
-
-You're now running the **full ASP.NET Core + Angular app** on a single port (e.g., `https://localhost:5001`) with:
-
-* The **backend** serving `/api` requests
-* The **Angular frontend** served by the backend via `ng serve`
-* The **default WeatherForecast UI** rendering correctly
+✅ That’s a solid move — since the **WeatherForecast** API worked, let’s replicate its exact pattern to ensure your `PromptController` behaves the same way.
 
 ---
 
-## 🎯 Next Steps: Turn This into an Ollama Wrapper
+## ✅ Let’s Follow the Working WeatherForecast Example Exactly
 
-Let’s now remove the sample code and build your own **Prompt UI** connected to **Ollama**.
+We'll do 3 things:
 
----
-
-### ✅ Step 1: Delete Sample Weather Code
-
-#### 1.1 Delete the API Controller
-
-* Delete this file:
-
-  ```
-  /Controllers/WeatherForecastController.cs
-  ```
-
-#### 1.2 Delete the Model
-
-* Delete this file:
-
-  ```
-  /WeatherForecast.cs
-  ```
-
-#### 1.3 Delete Angular Weather Call
-
-Open:
-
-```
-ClientApp/src/app/app.component.ts
-```
-
-* Remove all references to:
-
-  ```ts
-  this.http.get<WeatherForecast[]>('weatherforecast')
-  ```
+1. **Match structure** of controller and model
+2. **Place files correctly**
+3. **Call API the same way**
 
 ---
 
-### ✅ Step 2: Create Your Prompt Controller (Backend)
+### ✅ Step 1: Create the Model (Like `WeatherForecast.cs`)
 
-Create a new file:
+**📄 Create: `PromptResponse.cs` in root folder**
 
+```csharp
+namespace OllamaWrapperApp
+{
+    public class PromptResponse
+    {
+        public string Response { get; set; }
+    }
+}
 ```
-/Controllers/PromptController.cs
-```
 
-Paste this:
+---
+
+### ✅ Step 2: Create the Controller (Match `WeatherForecastController.cs`)
+
+**📄 Create: `PromptController.cs` in `/Controllers` folder**
 
 ```csharp
 using Microsoft.AspNetCore.Mvc;
+using System.Net.Http.Json;
 
-[ApiController]
-[Route("api/[controller]")]
-public class PromptController : ControllerBase
+namespace OllamaWrapperApp.Controllers
 {
-    [HttpPost("generate")]
-    public async Task<IActionResult> Generate([FromBody] PromptRequest request)
+    [ApiController]
+    [Route("[controller]")]
+    public class PromptController : ControllerBase
     {
-        using var client = new HttpClient();
-        var ollamaRequest = new
+        private readonly ILogger<PromptController> _logger;
+
+        public PromptController(ILogger<PromptController> logger)
         {
-            model = "llama3",
-            prompt = request.Prompt
-        };
+            _logger = logger;
+        }
 
-        var response = await client.PostAsJsonAsync("http://localhost:11434/api/generate", ollamaRequest);
-        var resultJson = await response.Content.ReadFromJsonAsync<JsonElement>();
-        var text = resultJson.GetProperty("response").GetString();
+        [HttpPost]
+        public async Task<IEnumerable<PromptResponse>> Post([FromBody] PromptRequest request)
+        {
+            var client = new HttpClient();
 
-        return Ok(new { response = text });
+            var ollamaRequest = new
+            {
+                model = "llama3",
+                prompt = request.Prompt
+            };
+
+            var response = await client.PostAsJsonAsync("http://localhost:11434/api/generate", ollamaRequest);
+            var json = await response.Content.ReadFromJsonAsync<JsonElement>();
+            var result = json.GetProperty("response").GetString();
+
+            return new List<PromptResponse>
+            {
+                new PromptResponse { Response = result }
+            };
+        }
+    }
+
+    public class PromptRequest
+    {
+        public string Prompt { get; set; }
     }
 }
-
-public class PromptRequest
-{
-    public string Prompt { get; set; }
-}
 ```
+
+> ✅ Note: We return a list `IEnumerable<PromptResponse>` just like `WeatherForecastController` does.
 
 ---
 
-### ✅ Step 3: Update Angular UI
-
-#### 3.1 Update `app.component.ts`
-
-```ts
-import { Component } from '@angular/core';
-import { HttpClient } from '@angular/common/http';
-
-@Component({
-  selector: 'app-root',
-  templateUrl: './app.component.html'
-})
-export class AppComponent {
-  prompt = '';
-  response = '';
-
-  constructor(private http: HttpClient) {}
-
-  sendPrompt() {
-    this.http.post<any>('/api/prompt/generate', { prompt: this.prompt }).subscribe(
-      res => this.response = res.response,
-      err => this.response = 'Error: ' + err.message
-    );
-  }
-}
-```
-
-#### 3.2 Update `app.component.html`
-
-```html
-<div style="padding: 20px;">
-  <h2>Ollama Prompt Interface</h2>
-  <textarea [(ngModel)]="prompt" rows="5" cols="60" placeholder="Enter prompt..."></textarea><br><br>
-  <button (click)="sendPrompt()">Send to Ollama</button>
-
-  <h3>Response:</h3>
-  <pre>{{ response }}</pre>
-</div>
-```
-
-#### 3.3 Enable `FormsModule`
-
-In `ClientApp/src/app/app.module.ts`, add:
-
-```ts
-import { FormsModule } from '@angular/forms';
-
-@NgModule({
-  imports: [BrowserModule, HttpClientModule, FormsModule],
-  ...
-})
-```
-
----
-
-### ✅ Step 4: Re-run the App
-
-Now re-run:
+### ✅ Step 3: Rebuild and Run
 
 ```bash
+dotnet build
 dotnet run
 ```
 
-Then open:
+You should now have an endpoint:
 
 ```
-https://localhost:5001
+POST https://localhost:5001/prompt
 ```
 
-You’ll see a prompt input → it sends to `/api/prompt/generate` → talks to Ollama → and shows the result 🎉
+Use **Postman** with:
+
+* **POST**
+* **URL**: `https://localhost:5001/prompt`
+* **Header**: `Content-Type: application/json`
+* **Body**:
+
+```json
+{
+  "prompt": "What is AI?"
+}
+```
 
 ---
 
-Would you like help:
+## 🧠 Want to Try it in Browser First?
 
-* Styling it better?
-* Adding model or temperature options?
-* Handling streaming output from Ollama?
+Add this `GET` endpoint to test in browser (optional):
 
-Let me know!
+```csharp
+[HttpGet]
+public IEnumerable<PromptResponse> Get()
+{
+    return new List<PromptResponse>
+    {
+        new PromptResponse { Response = "Prompt controller is working." }
+    };
+}
+```
+
+Then visit:
+
+```
+https://localhost:5001/prompt
+```
+
+---
+
+Let me know once this works — then I’ll help you update your Angular code to match the new endpoint (`/prompt`).
