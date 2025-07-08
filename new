@@ -1,49 +1,15 @@
-Got it — you want the **prompt to contain both:**
-
-1. ✅ A **JSON table** (from the pasted CSV), and
-2. ✅ A **set of natural-language instructions** (for the LLM, e.g., Gemma)
-
----
-
-### ✅ Final Format Example
-
-```text
-You are a financial analyst. Analyze the following portfolio attribution data in JSON format.
-
-Identify key allocation and selection effects, and explain any performance variance based on the data.
-
-Data:
-[
-  {
-    "Industry Code": "Tech",
-    "Portfolio Weight": "0.25",
-    "Benchmark Weight": "0.30"
-  },
-  {
-    "Industry Code": "Energy",
-    "Portfolio Weight": "0.10",
-    "Benchmark Weight": "0.05"
-  }
-]
-```
-
----
-
-### ✅ Angular Update: Prepend Instructions to JSON
-
-#### ✅ `generatePrompt()` method updated:
-
-```ts
 generatePrompt() {
   try {
     const lines = this.rawInput.trim().split('\n');
     if (lines.length < 2) {
-      this.prompt = 'Invalid table. At least 1 header and 1 row required.';
+      this.prompt = 'Invalid table.';
       return;
     }
 
     const headers = lines[0].split(',').map(h => h.trim());
-    const jsonData = lines.slice(1).map(line => {
+    const dataLines = lines.slice(1);
+
+    const dataRows = dataLines.map(line => {
       const values = line.split(',').map(v => v.trim());
       const row: any = {};
       headers.forEach((header, index) => {
@@ -52,46 +18,40 @@ generatePrompt() {
       return row;
     });
 
-    const jsonString = JSON.stringify(jsonData, null, 2);
+    const lastColumn = headers[headers.length - 1];
+    const totalRow = dataRows[dataRows.length - 1];
+    const isTotal = totalRow[headers[0]].toLowerCase() === 'total';
+
+    const rowsToSort = isTotal ? dataRows.slice(0, -1) : [...dataRows];
+
+    // Sort in descending order by last column
+    rowsToSort.sort((a, b) => {
+      const aVal = parseFloat(a[lastColumn]) || 0;
+      const bVal = parseFloat(b[lastColumn]) || 0;
+      return bVal - aVal;
+    });
+
+    // Tag top 3 and bottom 3
+    rowsToSort.forEach((row, index, arr) => {
+      if (index < 3) row['Tag'] = 'Top Performer';
+      else if (index >= arr.length - 3) row['Tag'] = 'Underperformer';
+    });
+
+    const finalData = [...rowsToSort];
+
+    if (isTotal) {
+      totalRow['Tag'] = 'Total';
+      finalData.push(totalRow);
+    }
+
+    const jsonString = JSON.stringify(finalData, null, 2);
 
     this.prompt =
-      `You are a financial analyst. Analyze the following portfolio attribution data in JSON format.\n\n` +
-      `Identify key allocation and selection effects, and explain any performance variance based on the data.\n\n` +
+      `You are a financial analyst. Analyze the following portfolio attribution data.\n\n` +
+      `The table is sorted by the last column ("${lastColumn}").\n` +
+      `The top 3 sectors are marked as "Top Performer", the bottom 3 as "Underperformer", and the last row is a "Total".\n\n` +
       `Data:\n${jsonString}`;
   } catch (err) {
     this.prompt = 'Error parsing input.';
   }
 }
-```
-
----
-
-### ✅ UI (Optional: make JSON scrollable and styled)
-
-You can update the `<pre>` block to make the output more readable if needed.
-
----
-
-### 🔜 Want to send this prompt to your backend after processing?
-
-Let me know — I’ll help you hook up the POST request to your Ollama `.NET Web API`.
-
-
-
-<div class="input-section">
-  <textarea
-    rows="10"
-    cols="80"
-    [(ngModel)]="rawInput"
-    placeholder="Paste your CSV table here..."
-  ></textarea>
-  <br />
-
-  <button (click)="generatePrompt()">Generate Prompt</button>
-
-  <div *ngIf="prompt" class="prompt-output">
-    <h3>Generated JSON:</h3>
-    <pre>{{ prompt }}</pre>
-  </div>
-</div>
-
