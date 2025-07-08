@@ -18,38 +18,45 @@ generatePrompt() {
       return row;
     });
 
+    // Remove and store last row (total)
+    const totalRow = dataRows.pop()!;
+
     const lastColumn = headers[headers.length - 1];
-    const totalRow = dataRows[dataRows.length - 1];
-    const isTotal = totalRow[headers[0]].toLowerCase() === 'total';
 
-    const rowsToSort = isTotal ? dataRows.slice(0, -1) : [...dataRows];
-
-    // Sort in descending order by last column
-    rowsToSort.sort((a, b) => {
+    // Sort in descending order by the last column
+    dataRows.sort((a, b) => {
       const aVal = parseFloat(a[lastColumn]) || 0;
       const bVal = parseFloat(b[lastColumn]) || 0;
       return bVal - aVal;
     });
 
     // Tag top 3 and bottom 3
-    rowsToSort.forEach((row, index, arr) => {
+    dataRows.forEach((row, index, arr) => {
       if (index < 3) row['Tag'] = 'Top Performer';
       else if (index >= arr.length - 3) row['Tag'] = 'Underperformer';
     });
 
-    const finalData = [...rowsToSort];
+    const finalData = [...dataRows];
 
-    if (isTotal) {
-      totalRow['Tag'] = 'Total';
-      finalData.push(totalRow);
-    }
+    // Build a Total object as a separate JSON block
+    const totalData: any = {};
+    headers.slice(1).forEach(header => {
+      totalData[header] = totalRow[header] || '';
+    });
 
-    const jsonString = JSON.stringify(finalData, null, 2);
+    // Combine into final object
+    const completeOutput = [
+      ...finalData,
+      { Total: totalData }
+    ];
+
+    const jsonString = JSON.stringify(completeOutput, null, 2);
 
     this.prompt =
       `You are a financial analyst. Analyze the following portfolio attribution data.\n\n` +
       `The table is sorted by the last column ("${lastColumn}").\n` +
-      `The top 3 sectors are marked as "Top Performer", the bottom 3 as "Underperformer", and the last row is a "Total".\n\n` +
+      `The top 3 sectors are marked as "Top Performer", the bottom 3 as "Underperformer".\n` +
+      `The last item in the list is the Total row, showing column-wise totals.\n\n` +
       `Data:\n${jsonString}`;
   } catch (err) {
     this.prompt = 'Error parsing input.';
