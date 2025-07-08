@@ -1107,3 +1107,176 @@ Let me know if you want:
 
 Ready to help with next feature 💡
 
+
+
+Ah — that explains it. You're likely using the **default Angular CLI structure** where `AppComponent` is the root component and **you haven't yet added a custom `attribution` component**.
+
+Let me guide you step-by-step to fix this **cleanly within your existing Angular app**, using your existing `app.component.*` files.
+
+---
+
+## ✅ Step-by-Step: Integrate the Attribution Feature in Default AppComponent
+
+---
+
+### ✅ 1. Enable `FormsModule` (to fix `[(ngModel)]` issue)
+
+In `src/app/app.module.ts`, add:
+
+```ts
+import { FormsModule } from '@angular/forms';
+
+@NgModule({
+  imports: [
+    BrowserModule,
+    HttpClientModule,
+    FormsModule // ✅ ADD THIS
+  ],
+  ...
+})
+```
+
+> Without `FormsModule`, `[(ngModel)]` throws an error like:
+> `"Can't bind to 'ngModel' since it isn't a known property of 'textarea'"`
+
+---
+
+### ✅ 2. Replace `app.component.html` with Working UI
+
+**File:** `src/app/app.component.html`
+
+```html
+<div class="container">
+  <h2>Paste CSV</h2>
+  <textarea [(ngModel)]="csvText" rows="10" placeholder="Paste CSV..."></textarea>
+
+  <button (click)="generatePrompt()">Generate Prompt</button>
+
+  <h3>Editable Prompt</h3>
+  <textarea [(ngModel)]="promptText" rows="10" placeholder="Edit prompt..."></textarea>
+
+  <div class="controls">
+    <label>Model:
+      <select [(ngModel)]="selectedModel">
+        <option value="gemma:27b">gemma:27b</option>
+        <option value="llama3">llama3</option>
+        <option value="mistral">mistral</option>
+      </select>
+    </label>
+
+    <label>Temperature: {{ temperature }}
+      <input type="range" min="0" max="1" step="0.01" [(ngModel)]="temperature">
+    </label>
+  </div>
+
+  <button (click)="generateCommentary()">Generate Commentary</button>
+
+  <h3>LLM Summary</h3>
+  <pre>{{ summary }}</pre>
+</div>
+```
+
+---
+
+### ✅ 3. Replace `app.component.ts` Logic
+
+**File:** `src/app/app.component.ts`
+
+```ts
+import { Component } from '@angular/core';
+import { HttpClient } from '@angular/common/http';
+
+@Component({
+  selector: 'app-root',
+  templateUrl: './app.component.html',
+  styleUrls: ['./app.component.css']
+})
+export class AppComponent {
+  csvText = '';
+  promptText = '';
+  summary = '';
+  selectedModel = 'gemma:27b';
+  temperature = 0.7;
+
+  constructor(private http: HttpClient) {}
+
+  generatePrompt() {
+    this.http.post<any>('/api/attribution/generate-prompt', { csv: this.csvText })
+      .subscribe(res => this.promptText = res.prompt);
+  }
+
+  generateCommentary() {
+    this.http.post<any>('/api/attribution/generate-commentary', {
+      csv: this.csvText,
+      promptOverride: this.promptText,
+      model: this.selectedModel,
+      temperature: this.temperature
+    }).subscribe(res => this.summary = res.summary);
+  }
+}
+```
+
+---
+
+### ✅ 4. Replace `app.component.css` for Styling (Optional)
+
+```css
+.container {
+  padding: 20px;
+  font-family: Arial, sans-serif;
+}
+
+textarea {
+  width: 100%;
+  padding: 10px;
+  margin: 10px 0;
+  font-family: monospace;
+  border: 1px solid #ccc;
+  border-radius: 5px;
+}
+
+button {
+  padding: 10px 20px;
+  margin: 10px 5px 10px 0;
+  background-color: #007acc;
+  color: white;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+}
+
+button:hover {
+  background-color: #005999;
+}
+
+.controls {
+  display: flex;
+  gap: 20px;
+  align-items: center;
+  margin: 10px 0;
+}
+
+pre {
+  background: #f5f5f5;
+  padding: 10px;
+  white-space: pre-wrap;
+  border-radius: 5px;
+  border: 1px solid #ddd;
+}
+```
+
+---
+
+## 🔁 Recap
+
+| Step                                 | You Did                                  |
+| ------------------------------------ | ---------------------------------------- |
+| Use default `AppComponent`           | ✅ Yes                                    |
+| Import `FormsModule`                 | ✅ Required for `ngModel`                 |
+| Move HTML + Logic to `app.component` | ✅ Done                                   |
+| Hook buttons to backend              | ✅ `generatePrompt`, `generateCommentary` |
+
+---
+
+Would you like me to generate a working zip or GitHub repo with this ready to go?
+
