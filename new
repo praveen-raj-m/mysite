@@ -168,8 +168,244 @@ pre {
 }
 ```
 
+Perfect — let’s now set up the backend in your `.NET` project located in:
+
+```
+angularapp_promptengineering.server/
+```
+
 ---
 
-### ✅ Next Step (Step 2): Set up the .NET backend in `angularapp_promptengineering.server`
+## ✅ Step 2: Backend Setup (File-by-File)
 
-Let me know if you're ready to continue with the backend setup (controller, models, service) and I’ll walk you through that next.
+### 🔹 1. Create a Folder `Models` in `server` project
+
+#### File: `Models/AttributionRow.cs`
+
+```csharp
+namespace angularapp_promptengineering.server.Models
+{
+    public class AttributionRow
+    {
+        public string Sector { get; set; }
+        public double PortfolioWeight { get; set; }
+        public double PortfolioReturn { get; set; }
+        public double PortfolioCtrb { get; set; }
+        public double BenchmarkWeight { get; set; }
+        public double BenchmarkReturn { get; set; }
+        public double BenchmarkCtrb { get; set; }
+        public double VarianceWeight { get; set; }
+        public double VarianceReturn { get; set; }
+        public double VarianceCtrb { get; set; }
+        public double Allocation { get; set; }
+        public double Selection { get; set; }
+        public double TotalManagement => Allocation + Selection;
+        public double WeightVariance => PortfolioWeight - BenchmarkWeight;
+    }
+}
+```
+
+#### File: `Models/CsvInput.cs`
+
+```csharp
+namespace angularapp_promptengineering.server.Models
+{
+    public class CsvInput
+    {
+        public string Csv { get; set; }
+        public string PromptOverride { get; set; }
+        public string Model { get; set; }
+        public float Temperature { get; set; }
+    }
+}
+```
+
+---
+
+### 🔹 2. Create a Folder `Services`
+
+#### File: `Services/OllamaService.cs`
+
+```csharp
+using System.Net.Http;
+using System.Net.Http.Json;
+using System.Threading.Tasks;
+
+namespace angularapp_promptengineering.server.Services
+{
+    public class OllamaService
+    {
+        private readonly HttpClient _httpClient;
+        private const string OllamaUrl = "http://localhost:11434/api/generate";
+
+        public OllamaService(HttpClient httpClient)
+        {
+            _httpClient = httpClient;
+        }
+
+        public async Task<string> GetLLMSummaryAsync(string prompt, string model, float temperature)
+        {
+            var request = new
+            {
+                model = model,
+                prompt = prompt,
+                stream = false,
+                options = new { temperature = temperature }
+            };
+
+            var response = await _httpClient.PostAsJsonAsync(OllamaUrl, request);
+            if (!response.IsSuccessStatusCode) return "LLM call failed.";
+
+            var result = await response.Content.ReadFromJsonAsync<OllamaResponse>();
+            return result.response;
+        }
+
+        private class OllamaResponse
+        {
+            public string response { get; set; }
+        }
+    }
+}
+```
+
+---
+
+### 🔹 3. Create Controller
+
+#### File: `Controllers/AttributionController.cs`
+
+```csharp
+using Microsoft.AspNetCore.Mvc;
+using angularapp_promptengineering.server.Models;
+using angularapp_promptengineering.server.Services;
+using System.Text;
+
+namespace angularapp_promptengineering.server.Controllers
+{
+    [ApiController]
+    [Route("api/[controller]")]
+    public class AttributionController : ControllerBase
+    {
+        private readonly OllamaService _ollamaService;
+
+        public AttributionController(OllamaService ollamaService)
+        {
+            _ollamaService = ollamaService;
+        }
+
+        [HttpPost("generate-prompt")]
+        public IActionResult GeneratePrompt([FromBody] CsvInput input)
+        {
+            var rows = ParseCsv(input.Csv);
+            if (!rows.Any()) return BadRequest("No valid data.");
+
+            var sb = new StringBuilder();
+            var top = rows.OrderByDescending(r => r.TotalManagement).Take(2);
+            var bottom = rows.OrderBy(r => r.TotalManagement).Take(2);
+            var noteworthy = rows
+                .Where(r => Math.Abs(r.WeightVariance) > 0.05 && r.Selection > 0.1)
+                .Select(r => $"{r.Sector}: Over/Underweight with strong selection (+{r.Selection:F2})");
+
+            sb.AppendLine("Top Sectors:");
+            foreach (var r in top)
+                sb.AppendLine($"- {r.Sector}: TotalMgmt {r.TotalManagement:F2}, Alloc {r.Allocation:F2}, Sel {r.Selection:F2}");
+            sb.AppendLine("Bottom Sectors:");
+            foreach (var r in bottom)
+                sb.AppendLine($"- {r.Sector}: TotalMgmt {r.TotalManagement:F2}, Alloc {r.Allocation:F2}, Sel {r.Selection:F2}");
+            sb.AppendLine("Noteworthy:");
+            foreach (var note in noteworthy)
+                sb.AppendLine($"- {note}");
+
+            var prompt = $"You are a financial analyst. Based on this data:\n{sb}\nWrite a client-friendly performance attribution summary.";
+            return Ok(new { prompt });
+        }
+
+        [HttpPost("generate-commentary")]
+        public async Task<IActionResult> GenerateCommentary([FromBody] CsvInput input)
+        {
+            var prompt = input.PromptOverride;
+            var model = string.IsNullOrEmpty(input.Model) ? "gemma:27b" : input.Model;
+            var temperature = input.Temperature <= 0 ? 0.7f : input.Temperature;
+
+            var result = await _ollamaService.GetLLMSummaryAsync(prompt, model, temperature);
+            return Ok(new { summary = result });
+        }
+
+        private List<AttributionRow> ParseCsv(string csv)
+        {
+            var rows = new List<AttributionRow>();
+            var lines = csv.Split('\n').Skip(1);
+            foreach (var line in lines)
+            {
+                var cols = line.Split(',');
+                if (cols.Length < 12) continue;
+
+                try
+                {
+                    rows.Add(new AttributionRow
+                    {
+                        Sector = cols[0],
+                        PortfolioWeight = double.Parse(cols[1]),
+                        PortfolioReturn = double.Parse(cols[2]),
+                        PortfolioCtrb = double.Parse(cols[3]),
+                        BenchmarkWeight = double.Parse(cols[4]),
+                        BenchmarkReturn = double.Parse(cols[5]),
+                        BenchmarkCtrb = double.Parse(cols[6]),
+                        VarianceWeight = double.Parse(cols[7]),
+                        VarianceReturn = double.Parse(cols[8]),
+                        VarianceCtrb = double.Parse(cols[9]),
+                        Allocation = double.Parse(cols[10]),
+                        Selection = double.Parse(cols[11])
+                    });
+                }
+                catch { continue; }
+            }
+            return rows;
+        }
+    }
+}
+```
+
+---
+
+### 🔹 4. Register Services in `Program.cs`
+
+Open `Program.cs` and add:
+
+```csharp
+var builder = WebApplication.CreateBuilder(args);
+
+builder.Services.AddControllers();
+builder.Services.AddHttpClient<OllamaService>(); // ✅ Register Ollama service
+
+var app = builder.Build();
+
+app.UseHttpsRedirection();
+app.MapControllers();
+
+app.Run();
+```
+
+---
+
+## ✅ Done!
+
+You're now ready to run everything from the root terminal:
+
+```bash
+cd angularapp_promptengineering.server
+dotnet run
+```
+
+Then visit: `https://localhost:5001` → Angular will be served with backend together.
+
+---
+
+Would you like me to now add:
+
+* A sample CSV file?
+* Export to PDF button?
+* Charts for sector attribution?
+
+Let me know what’s next!
+
