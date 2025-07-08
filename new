@@ -1,128 +1,77 @@
-Yes — you're absolutely right, and thank you for clarifying! 🙌
+Got it — you want the **prompt to contain both:**
 
-When you use the **ASP.NET Core + Angular template in Visual Studio**, the project is split like this:
-
-```
-/YourSolution/
-├── /ClientApp/   <-- Angular frontend
-├── /Server/      <-- ASP.NET Core backend
-```
-
-So everything we’ve been discussing needs to be placed correctly inside the **`/Server`** folder — not the root.
+1. ✅ A **JSON table** (from the pasted CSV), and
+2. ✅ A **set of natural-language instructions** (for the LLM, e.g., Gemma)
 
 ---
 
-## ✅ Updated File Placement for Split Structure
+### ✅ Final Format Example
 
-Here's exactly where your files should go:
+```text
+You are a financial analyst. Analyze the following portfolio attribution data in JSON format.
+
+Identify key allocation and selection effects, and explain any performance variance based on the data.
+
+Data:
+[
+  {
+    "Industry Code": "Tech",
+    "Portfolio Weight": "0.25",
+    "Benchmark Weight": "0.30"
+  },
+  {
+    "Industry Code": "Energy",
+    "Portfolio Weight": "0.10",
+    "Benchmark Weight": "0.05"
+  }
+]
+```
 
 ---
 
-### ✅ 1. `PromptResponse.cs`
+### ✅ Angular Update: Prepend Instructions to JSON
 
-**📄 Path:**
-`/Server/PromptResponse.cs`
+#### ✅ `generatePrompt()` method updated:
 
-```csharp
-namespace Server
-{
-    public class PromptResponse
-    {
-        public string Response { get; set; }
+```ts
+generatePrompt() {
+  try {
+    const lines = this.rawInput.trim().split('\n');
+    if (lines.length < 2) {
+      this.prompt = 'Invalid table. At least 1 header and 1 row required.';
+      return;
     }
+
+    const headers = lines[0].split(',').map(h => h.trim());
+    const jsonData = lines.slice(1).map(line => {
+      const values = line.split(',').map(v => v.trim());
+      const row: any = {};
+      headers.forEach((header, index) => {
+        row[header] = values[index] || '';
+      });
+      return row;
+    });
+
+    const jsonString = JSON.stringify(jsonData, null, 2);
+
+    this.prompt =
+      `You are a financial analyst. Analyze the following portfolio attribution data in JSON format.\n\n` +
+      `Identify key allocation and selection effects, and explain any performance variance based on the data.\n\n` +
+      `Data:\n${jsonString}`;
+  } catch (err) {
+    this.prompt = 'Error parsing input.';
+  }
 }
 ```
 
 ---
 
-### ✅ 2. `PromptController.cs`
+### ✅ UI (Optional: make JSON scrollable and styled)
 
-**📄 Path:**
-`/Server/Controllers/PromptController.cs`
-
-```csharp
-using Microsoft.AspNetCore.Mvc;
-using System.Net.Http.Json;
-using System.Text.Json;
-
-namespace Server.Controllers
-{
-    [ApiController]
-    [Route("[controller]")]
-    public class PromptController : ControllerBase
-    {
-        private readonly ILogger<PromptController> _logger;
-
-        public PromptController(ILogger<PromptController> logger)
-        {
-            _logger = logger;
-        }
-
-        [HttpPost]
-        public async Task<IEnumerable<PromptResponse>> Post([FromBody] PromptRequest request)
-        {
-            var client = new HttpClient();
-
-            var ollamaRequest = new
-            {
-                model = "llama3",
-                prompt = request.Prompt
-            };
-
-            var response = await client.PostAsJsonAsync("http://localhost:11434/api/generate", ollamaRequest);
-            var json = await response.Content.ReadFromJsonAsync<JsonElement>();
-            var result = json.GetProperty("response").GetString();
-
-            return new List<PromptResponse>
-            {
-                new PromptResponse { Response = result }
-            };
-        }
-    }
-
-    public class PromptRequest
-    {
-        public string Prompt { get; set; }
-    }
-}
-```
+You can update the `<pre>` block to make the output more readable if needed.
 
 ---
 
-### 🔁 3. Rebuild and Run
+### 🔜 Want to send this prompt to your backend after processing?
 
-Now do:
-
-```bash
-cd Server
-dotnet build
-dotnet run
-```
-
-You should see:
-
-```
-Now listening on: https://localhost:5001
-```
-
----
-
-### ✅ 4. Test in Postman
-
-**POST** to:
-
-```
-https://localhost:5001/prompt
-```
-
-**With Body:**
-
-```json
-{
-  "prompt": "What is machine learning?"
-}
-```
-
----
-
-Would you like help adapting the Angular code inside `/ClientApp/src/app` to call this new `/prompt` endpoint now?
+Let me know — I’ll help you hook up the POST request to your Ollama `.NET Web API`.
