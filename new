@@ -122,3 +122,92 @@ export class AppComponent {
     }
   }
 }
+
+
+
+
+
+
+
+generatePrompt() {
+  try {
+    const lines = this.rawInput.trim().split('\n');
+    if (lines.length < 2) {
+      this.prompt = 'Invalid table.';
+      return;
+    }
+
+    // Hardcoded headers — ignore first line of CSV
+    const headers = this.yourHeaders;
+    const dataLines = lines.slice(1); // skip header line
+
+    // Parse CSV rows using fixed headers
+    const dataRows = dataLines.map(line => {
+      const values = line.split(',').map(v => v.trim());
+      const row: any = {};
+      headers.forEach((header, index) => {
+        row[header] = values[index] || '';
+      });
+      return row;
+    });
+
+    // Remove last row as Total
+    const totalRow = dataRows.pop()!;
+    const performanceCol = headers[headers.length - 1]; // Last column
+    const investmentCol = 'Portfolio Weight'; // or another column
+
+    // Sort performance & investment separately for tagging
+    const performanceSorted = [...dataRows].sort((a, b) =>
+      (parseFloat(b[performanceCol]) || 0) - (parseFloat(a[performanceCol]) || 0)
+    );
+
+    const investmentSorted = [...dataRows].sort((a, b) =>
+      (parseFloat(b[investmentCol]) || 0) - (parseFloat(a[investmentCol]) || 0)
+    );
+
+    // Final sorted data by performance
+    const sortedFinal = [...performanceSorted];
+
+    // Tagging logic
+    const tagRow = (row: any) => {
+      const tags: string[] = [];
+
+      if (performanceSorted.indexOf(row) < 3) tags.push('Top Performer');
+      else if (performanceSorted.indexOf(row) >= performanceSorted.length - 3)
+        tags.push('Underperformer');
+
+      if (investmentSorted.indexOf(row) < 3) tags.push('High Investment');
+      else if (investmentSorted.indexOf(row) >= investmentSorted.length - 3)
+        tags.push('Low Investment');
+
+      return tags.length > 0 ? tags : undefined;
+    };
+
+    // Apply tags
+    const taggedRows = sortedFinal.map(row => {
+      const tags = tagRow(row);
+      return tags ? { ...row, Tags: tags } : row;
+    });
+
+    // Append Total as final entry
+    const totalData: any = {};
+    headers.slice(1).forEach(header => {
+      totalData[header] = totalRow[header] || '';
+    });
+
+    const outputJson = [...taggedRows, { Total: totalData }];
+    const jsonString = JSON.stringify(outputJson, null, 2);
+
+    // Final prompt
+    this.prompt =
+      `You are a financial analyst. Analyze the following portfolio attribution data.\n\n` +
+      `The table is sorted by "${performanceCol}" to assess performance, and also tagged based on "${investmentCol}".\n` +
+      `Each row may include:\n` +
+      `• "Top Performer" or "Underperformer" (based on performance)\n` +
+      `• "High Investment" or "Low Investment" (based on portfolio weight)\n\n` +
+      `The last object is the "Total" row showing column-wise totals.\n\n` +
+      `Data:\n${jsonString}`;
+  } catch (err) {
+    this.prompt = 'Error parsing input.';
+  }
+}
