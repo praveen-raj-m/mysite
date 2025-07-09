@@ -1,118 +1,88 @@
-Yes! ✅ You can absolutely render the formatted prompt (with `**`, `#`, or other Markdown syntax) **as styled HTML in Angular** instead of showing it as plain text.
-
-This makes your prompt visually readable like a README — **bold, headings, lists, etc.** will render properly.
+Yes — you can download the prompt as a **Word-compatible `.docx` file**, but it requires a little more than just changing the file extension. Since Word doesn't natively parse Markdown, we need to either:
 
 ---
 
-### ✅ Step-by-Step: Render Markdown in Angular
+### ✅ Option 1: Simple Word File (No Styling)
 
-#### 1. **Install `marked` and `DomSanitizer`**
+Just save the Markdown as a `.doc` or `.docx` **text file**. Word will open it, but it won't interpret formatting (like `**bold**` or `# heading`).
 
-In your Angular project root, run:
+#### 🔧 Minimal code change:
 
-```bash
-npm install marked
+```ts
+downloadPromptAsWord() {
+  const blob = new Blob([this.prompt], { type: 'application/msword' });
+  const url = window.URL.createObjectURL(blob);
+
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = 'prompt.doc';
+  a.click();
+
+  window.URL.revokeObjectURL(url);
+}
+```
+
+✅ Works — but the Markdown won't look styled in Word. It'll show as plain text.
+
+---
+
+### ✅ Option 2: Convert Markdown → HTML → Word (with real formatting)
+
+If you want the **Markdown fully styled in Word (bold, heading, JSON in monospace, etc.)**, here's how to do it:
+
+#### 🧠 Approach:
+
+1. Use `marked.parse()` to convert Markdown → HTML
+2. Wrap HTML in a basic Word-compatible document template
+3. Save it as `.doc` or `.docx`
+
+#### ✅ Add This Method:
+
+```ts
+downloadPromptAsWord() {
+  const htmlContent = marked.parse(this.prompt) as string;
+
+  const wordHtml = `
+    <html xmlns:o='urn:schemas-microsoft-com:office:office' 
+          xmlns:w='urn:schemas-microsoft-com:office:word' 
+          xmlns='http://www.w3.org/TR/REC-html40'>
+    <head><meta charset='utf-8'></head>
+    <body>${htmlContent}</body>
+    </html>
+  `;
+
+  const blob = new Blob([wordHtml], {
+    type: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+  });
+
+  const url = window.URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = 'prompt.doc';
+  a.click();
+  window.URL.revokeObjectURL(url);
+}
 ```
 
 ---
 
-#### 2. **Update your Component (`app.component.ts`)**
-
-Import `marked` and Angular's DOM sanitizer:
-
-````ts
-import { Component } from '@angular/core';
-import { DomSanitizer, SafeHtml } from '@angular/platform-browser';
-import { marked } from 'marked';
-
-@Component({
-  selector: 'app-root',
-  templateUrl: './app.component.html',
-  styleUrls: ['./app.component.css'],
-})
-export class AppComponent {
-  rawInput: string = '';
-  prompt: string = '';
-  renderedPrompt!: SafeHtml;
-
-  constructor(private sanitizer: DomSanitizer) {}
-
-  generatePrompt() {
-    // ... your existing logic ...
-
-    this.prompt =
-      `# Portfolio Attribution Analysis\n\n` +
-      `You are a **financial analyst**. Analyze the following **portfolio attribution data**.\n\n` +
-      `- Sorted by \`${performanceCol}\`\n` +
-      `- Tags like **Top Performer 1**, **Low Investment 2** are applied\n\n` +
-      '```json\n' +
-      jsonString +
-      '\n```\n';
-
-    this.renderedPrompt = this.sanitizer.bypassSecurityTrustHtml(marked(this.prompt));
-  }
-}
-````
-
----
-
-#### 3. **Update Your HTML (`app.component.html`)**
-
-Replace the `<pre>{{ prompt }}</pre>` block with:
+### ✅ Add Button in HTML
 
 ```html
-<div *ngIf="renderedPrompt" [innerHTML]="renderedPrompt" class="rendered-markdown"></div>
+<button (click)="downloadPromptAsWord()" *ngIf="prompt">Download as Word</button>
 ```
 
 ---
 
-#### 4. **Add Some Optional Styling (`app.component.css`)**
+### ✅ Result
 
-```css
-.rendered-markdown {
-  font-family: 'Segoe UI', sans-serif;
-  background: #f8f8f8;
-  padding: 1rem;
-  border-radius: 6px;
-  overflow-x: auto;
-}
-
-.rendered-markdown pre {
-  background-color: #222;
-  color: #fff;
-  padding: 10px;
-  border-radius: 4px;
-}
-```
+* The downloaded `.doc` file will open in Word
+* Markdown like `# Heading` or `**bold**` will appear correctly styled
+* JSON blocks will appear as preformatted text
 
 ---
 
-### ✅ Example Output Rendering:
+Let me know if you want the file to:
 
-````markdown
-# Portfolio Attribution Analysis
-
-You are a **financial analyst**. Analyze the following **portfolio attribution data**.
-
-- Sorted by `Selection Effect`
-- Tags like **Top Performer 1**, **Low Investment 2** are applied
-
-```json
-[
-  {
-    "Industry Code": "Tech",
-    "Tags": ["Top Performer 1", "High Investment 2"]
-  },
-  ...
-]
-````
-
-```
-
----
-
-Let me know if you’d like:
-- A toggle between raw view and rendered view  
-- Markdown editing support (like live preview)  
-- To send this prompt as raw Markdown or plain string to your backend
-```
+* Have a custom filename (e.g., with a timestamp)
+* Use a `.docx` wrapper with libraries like `docx.js` (for full-featured Word templates)
