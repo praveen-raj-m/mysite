@@ -1,82 +1,118 @@
-generatePrompt() {
-  try {
-    const lines = this.rawInput.trim().split('\n');
-    if (lines.length < 2) {
-      this.prompt = 'Invalid table.';
-      return;
-    }
+Yes! ✅ You can absolutely render the formatted prompt (with `**`, `#`, or other Markdown syntax) **as styled HTML in Angular** instead of showing it as plain text.
 
-    const headers = this.yourHeaders;
-    const dataLines = lines.slice(1); // skip first line
+This makes your prompt visually readable like a README — **bold, headings, lists, etc.** will render properly.
 
-    // Parse rows
-    const dataRows = dataLines.map(line => {
-      const values = line.split(',').map(v => v.trim());
-      const row: any = {};
-      headers.forEach((header, index) => {
-        row[header] = values[index] || '';
-      });
-      return row;
-    });
+---
 
-    // Remove total row
-    const totalRow = dataRows.pop()!;
-    const performanceCol = headers[headers.length - 1];
-    const investmentCol = 'Portfolio Weight';
+### ✅ Step-by-Step: Render Markdown in Angular
 
-    // Sort by performance and investment
-    const performanceSorted = [...dataRows].sort((a, b) =>
-      (parseFloat(b[performanceCol]) || 0) - (parseFloat(a[performanceCol]) || 0)
-    );
-    const investmentSorted = [...dataRows].sort((a, b) =>
-      (parseFloat(b[investmentCol]) || 0) - (parseFloat(a[investmentCol]) || 0)
-    );
+#### 1. **Install `marked` and `DomSanitizer`**
 
-    // Tag maps to track ranking
-    const performanceTagMap = new Map<any, string[]>();
-    const investmentTagMap = new Map<any, string[]>();
+In your Angular project root, run:
 
-    // Top Performer / Underperformer
-    performanceSorted.forEach((row, i, arr) => {
-      if (i < 3) performanceTagMap.set(row, [`Top Performer ${i + 1}`]);
-      else if (i >= arr.length - 3)
-        performanceTagMap.set(row, [`Underperformer ${arr.length - i}`]);
-    });
+```bash
+npm install marked
+```
 
-    // High Investment / Low Investment
-    investmentSorted.forEach((row, i, arr) => {
-      const existing = investmentTagMap.get(row) || [];
-      if (i < 3) investmentTagMap.set(row, [...existing, `High Investment ${i + 1}`]);
-      else if (i >= arr.length - 3)
-        investmentTagMap.set(row, [...existing, `Low Investment ${arr.length - i}`]);
-    });
+---
 
-    // Final sort by performance
-    const sortedFinal = [...performanceSorted].map(row => {
-      const tags = [
-        ...(performanceTagMap.get(row) || []),
-        ...(investmentTagMap.get(row) || [])
-      ];
-      return tags.length > 0 ? { ...row, Tags: tags } : row;
-    });
+#### 2. **Update your Component (`app.component.ts`)**
 
-    // Add total
-    const totalData: any = {};
-    headers.slice(1).forEach(header => {
-      totalData[header] = totalRow[header] || '';
-    });
+Import `marked` and Angular's DOM sanitizer:
 
-    const outputJson = [...sortedFinal, { Total: totalData }];
-    const jsonString = JSON.stringify(outputJson, null, 2);
+````ts
+import { Component } from '@angular/core';
+import { DomSanitizer, SafeHtml } from '@angular/platform-browser';
+import { marked } from 'marked';
+
+@Component({
+  selector: 'app-root',
+  templateUrl: './app.component.html',
+  styleUrls: ['./app.component.css'],
+})
+export class AppComponent {
+  rawInput: string = '';
+  prompt: string = '';
+  renderedPrompt!: SafeHtml;
+
+  constructor(private sanitizer: DomSanitizer) {}
+
+  generatePrompt() {
+    // ... your existing logic ...
 
     this.prompt =
-      `You are a financial analyst. Analyze the following portfolio attribution data.\n\n` +
-      `The data is sorted by "${performanceCol}". Rows are tagged with numbered labels:\n` +
-      `• "Top Performer 1", "Top Performer 2", etc.\n` +
-      `• "High Investment 1", "Low Investment 2", etc.\n` +
-      `The final row summarizes total values across all columns.\n\n` +
-      `Data:\n${jsonString}`;
-  } catch (err) {
-    this.prompt = 'Error parsing input.';
+      `# Portfolio Attribution Analysis\n\n` +
+      `You are a **financial analyst**. Analyze the following **portfolio attribution data**.\n\n` +
+      `- Sorted by \`${performanceCol}\`\n` +
+      `- Tags like **Top Performer 1**, **Low Investment 2** are applied\n\n` +
+      '```json\n' +
+      jsonString +
+      '\n```\n';
+
+    this.renderedPrompt = this.sanitizer.bypassSecurityTrustHtml(marked(this.prompt));
   }
 }
+````
+
+---
+
+#### 3. **Update Your HTML (`app.component.html`)**
+
+Replace the `<pre>{{ prompt }}</pre>` block with:
+
+```html
+<div *ngIf="renderedPrompt" [innerHTML]="renderedPrompt" class="rendered-markdown"></div>
+```
+
+---
+
+#### 4. **Add Some Optional Styling (`app.component.css`)**
+
+```css
+.rendered-markdown {
+  font-family: 'Segoe UI', sans-serif;
+  background: #f8f8f8;
+  padding: 1rem;
+  border-radius: 6px;
+  overflow-x: auto;
+}
+
+.rendered-markdown pre {
+  background-color: #222;
+  color: #fff;
+  padding: 10px;
+  border-radius: 4px;
+}
+```
+
+---
+
+### ✅ Example Output Rendering:
+
+````markdown
+# Portfolio Attribution Analysis
+
+You are a **financial analyst**. Analyze the following **portfolio attribution data**.
+
+- Sorted by `Selection Effect`
+- Tags like **Top Performer 1**, **Low Investment 2** are applied
+
+```json
+[
+  {
+    "Industry Code": "Tech",
+    "Tags": ["Top Performer 1", "High Investment 2"]
+  },
+  ...
+]
+````
+
+```
+
+---
+
+Let me know if you’d like:
+- A toggle between raw view and rendered view  
+- Markdown editing support (like live preview)  
+- To send this prompt as raw Markdown or plain string to your backend
+```
