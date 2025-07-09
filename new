@@ -1,47 +1,69 @@
-Great! Let’s connect the **chat interface in Angular** to your **local Ollama backend** using `fetch`. This will allow you to send messages and receive real-time responses from models like `llama3`, `gemma`, etc.
+✅ Perfect — here’s how to implement both:
 
 ---
 
-### ✅ Assumptions
+### ✅ 1. **Keep Chat History Until “Clear Chat”**
 
-* Ollama is running locally (e.g., via `ollama serve`)
-* The endpoint is available at:
-  `http://localhost:11434/api/chat` or `http://localhost:11434` depending on how you're using it
+You're already doing this with:
+
+```ts
+chatHistory: { role: 'user' | 'assistant', content: string }[] = [];
+```
+
+And clearing it with:
+
+```ts
+clearChatHistory() {
+  this.chatHistory = [];
+}
+```
+
+✅ This ensures history is remembered as long as the app is open — or until cleared.
 
 ---
 
-### ✅ Step-by-Step: Make `sendChatMessage()` connect to Ollama
+### ✅ 2. **Show “Generating...” While Waiting for Response**
 
-#### 1. Replace the placeholder `sendChatMessage()` in `app.component.ts`:
+Update `sendChatMessage()` to:
+
+* Push a temporary placeholder message (e.g., `Generating...`)
+* Replace it with the real response once it arrives
+
+---
+
+### ✅ Final Code: `sendChatMessage()`
 
 ```ts
 sendChatMessage() {
   const message = this.chatInput.trim();
   if (!message) return;
 
-  this.chatHistory.push({ role: 'user', content: message });
+  const userMsg = { role: 'user', content: message };
+  this.chatHistory.push(userMsg);
   this.chatInput = '';
 
-  fetch('http://localhost:11434/api/chat', {
+  // Add temporary 'Generating...' message
+  const placeholder = { role: 'assistant', content: 'Generating...' };
+  this.chatHistory.push(placeholder);
+
+  fetch('http://localhost:11434/api/generate', {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json'
     },
     body: JSON.stringify({
       model: this.selectedModel,
-      messages: [
-        ...this.chatHistory.map(m => ({ role: m.role, content: m.content })),
-        { role: 'user', content: message }
-      ]
+      prompt: message,
+      stream: false
     })
   })
     .then(res => res.json())
     .then(data => {
-      const reply = data.message?.content || '[No response from model]';
-      this.chatHistory.push({ role: 'assistant', content: reply });
+      const reply = data.response || '[No response from model]';
+      placeholder.content = reply; // Update in-place
     })
     .catch(err => {
-      this.chatHistory.push({ role: 'assistant', content: '[Error talking to Ollama]' });
+      placeholder.content = '[Error connecting to Ollama]';
       console.error(err);
     });
 }
@@ -49,47 +71,17 @@ sendChatMessage() {
 
 ---
 
-### ✅ 2. Enable CORS in Ollama (if needed)
+### ✅ Optional: Auto-scroll after update
 
-If you're accessing from Angular in browser, you may need to use a **proxy** or configure **CORS**. The fastest way:
-
-* Use Angular proxy config: `proxy.conf.json`
-
-```json
-{
-  "/api": {
-    "target": "http://localhost:11434",
-    "secure": false,
-    "changeOrigin": true,
-    "pathRewrite": {
-      "^/api": ""
-    }
-  }
-}
-```
-
-* Update your `angular.json`:
-
-```json
-"serve": {
-  "options": {
-    "proxyConfig": "proxy.conf.json"
-  }
-}
-```
-
-* Now replace fetch URL in your code:
+Add this after `placeholder.content = reply;`:
 
 ```ts
-fetch('/api/chat', { ... })
+setTimeout(() => {
+  const chatWindow = document.querySelector('.chat-window');
+  if (chatWindow) chatWindow.scrollTop = chatWindow.scrollHeight;
+}, 100);
 ```
 
 ---
 
-### ✅ Let Me Know If:
-
-* You want to stream responses (token-by-token)
-* You want loading indicators while waiting
-* You want to persist chat history to localStorage or file
-
-Once done, your Angular app will be talking directly with Ollama like a full client.
+Let me know if you want to persist chat history across sessions using `localStorage`, or include the full context (`messages: [...]`) for smarter replies!
