@@ -1,359 +1,59 @@
-import { Component } from '@angular/core';
-import { DomSanitizer, SafeHtml } from '@angular/platform-browser';
-import { marked } from 'marked';
-
-@Component({
-  selector: 'app-root',
-  templateUrl: './app.component.html',
-  styleUrls: ['./app.component.css'],
-})
-export class AppComponent {
-  rawInput: string = '';
-  prompt: string = '';
-  renderedPrompt!: SafeHtml;
-
-  // Define your headers here
-  yourHeaders: string[] = [
-    'Industry Code',
-    'Portfolio Weight',
-    'Benchmark Weight',
-    'Portfolio Return',
-    'Benchmark Return',
-    'Wgtd Contribution',
-    'Selection Effect'
-  ];
-
-  constructor(private sanitizer: DomSanitizer) {}
-
-  generatePrompt() {
-    try {
-      const lines = this.rawInput.trim().split('\n');
-      if (lines.length < 2) {
-        this.prompt = 'Invalid table.';
-        return;
-      }
-
-      const headers = this.yourHeaders;
-      const dataLines = lines.slice(1); // Skip CSV's first row
-
-      const dataRows = dataLines.map(line => {
-        const values = line.split(',').map(v => v.trim());
-        const row: any = {};
-        headers.forEach((header, index) => {
-          row[header] = values[index] || '';
-        });
-        return row;
-      });
-
-      const totalRow = dataRows.pop()!;
-      const performanceCol = headers[headers.length - 1];
-      const investmentCol = 'Portfolio Weight';
-
-      // === Tagging helpers ===
-      const performanceTags = this.assignRankTags(dataRows, performanceCol, 'Top Performer', true, 3);
-      const underperformanceTags = this.assignRankTags(dataRows, performanceCol, 'Underperformer', false, 3);
-      const hig
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-Awesome. Below is your full, final **Angular component implementation** with the following enhancements:
+Yes, absolutely! ✅ You can add **normal plain strings** (not HTML) to the file content — **but it depends on the file format you're generating**.
 
 ---
 
-### ✅ Final Features
+### ⚠️ If you're generating a `.doc` (Word-compatible) file:
 
-#### CSV Handling
+Word expects **HTML**, so strings should be inside tags like `<p>`, `<h1>`, etc.
 
-* Replaces all `,,` with `,` before parsing (to clean up bad input).
-
-#### User UI + Workflow
-
-* Adds a text input for the **output file name**.
-* **Disables** "Generate Prompt" and "Download" buttons while processing.
-* Final file (Word `.doc`) includes:
-
-  1. **CSV Data** (under `## Data`)
-  2. **Formatted JSON Output**
-  3. The **full LLM Prompt**
+But you **can still insert normal strings** — just wrap them in `<p>` or convert them to HTML first.
 
 ---
 
-### ✅ `app.component.ts`
+### ✅ Example: Add Plain Strings to Word `.doc` Blob
 
-````ts
-import { Component } from '@angular/core';
-import { DomSanitizer, SafeHtml } from '@angular/platform-browser';
-import { marked } from 'marked';
+```ts
+const extraText = `
+Summary of the Report:
+Generated using internal tool for LLM formatting.
 
-@Component({
-  selector: 'app-root',
-  templateUrl: './app.component.html',
-  styleUrls: ['./app.component.css'],
-})
-export class AppComponent {
-  rawInput: string = '';
-  prompt: string = '';
-  renderedPrompt!: SafeHtml;
-  fileName: string = 'LLM_Report';
-  isGenerating: boolean = false;
-  cleanedCsv: string = '';
+Please verify totals and attribution tags manually before sending to analysts.
+`;
 
-  yourHeaders: string[] = [
-    'Industry Code',
-    'Portfolio Weight',
-    'Benchmark Weight',
-    'Portfolio Return',
-    'Benchmark Return',
-    'Wgtd Contribution',
-    'Selection Effect'
-  ];
+const htmlifiedExtraText = extraText
+  .split('\n')
+  .map(line => `<p>${line}</p>`)
+  .join('');
 
-  constructor(private sanitizer: DomSanitizer) {}
+// Combine with HTML prompt content
+const htmlContent = marked.parse(this.prompt) as string;
 
-  generatePrompt() {
-    this.isGenerating = true;
+const wordHtml = `
+  <html xmlns:o='urn:schemas-microsoft-com:office:office' 
+        xmlns:w='urn:schemas-microsoft-com:office:word' 
+        xmlns='http://www.w3.org/TR/REC-html40'>
+  <head><meta charset='utf-8'></head>
+  <body>
+    ${htmlifiedExtraText}
+    <hr/>
+    ${htmlContent}
+  </body>
+  </html>
+`;
 
-    setTimeout(() => {
-      try {
-        const cleaned = this.rawInput.replace(/,,+/g, ',');
-        this.cleanedCsv = cleaned; // for saving raw data later
-
-        const lines = cleaned.trim().split('\n');
-        if (lines.length < 2) {
-          this.prompt = 'Invalid table.';
-          this.isGenerating = false;
-          return;
-        }
-
-        const headers = this.yourHeaders;
-        const dataLines = lines.slice(1); // skip CSV header line
-
-        const dataRows = dataLines.map(line => {
-          const values = line.split(',').map(v => v.trim());
-          const row: any = {};
-          headers.forEach((header, index) => {
-            row[header] = values[index] || '';
-          });
-          return row;
-        });
-
-        const totalRow = dataRows.pop()!;
-        const performanceCol = headers[headers.length - 1];
-        const investmentCol = 'Portfolio Weight';
-
-        const performanceTags = this.assignRankTags(dataRows, performanceCol, 'Top Performer', true, 3);
-        const underperformanceTags = this.assignRankTags(dataRows, performanceCol, 'Underperformer', false, 3);
-        const highInvestmentTags = this.assignRankTags(dataRows, investmentCol, 'High Investment', true, 3);
-        const lowInvestmentTags = this.assignRankTags(dataRows, investmentCol, 'Low Investment', false, 3);
-
-        const sortedByPerformance = [...dataRows].sort((a, b) =>
-          (parseFloat(b[performanceCol]) || 0) - (parseFloat(a[performanceCol]) || 0)
-        );
-
-        const taggedRows = sortedByPerformance.map(row => {
-          const tags = [
-            ...(performanceTags.get(row) || []),
-            ...(underperformanceTags.get(row) || []),
-            ...(highInvestmentTags.get(row) || []),
-            ...(lowInvestmentTags.get(row) || [])
-          ];
-          return tags.length ? { ...row, Tags: tags } : row;
-        });
-
-        const totalData: any = {};
-        headers.slice(1).forEach(header => {
-          totalData[header] = totalRow[header] || '';
-        });
-
-        const outputJson = [...taggedRows, { Total: totalData }];
-        const jsonString = JSON.stringify(outputJson, null, 2);
-
-        // Final LLM prompt with formatting
-        this.prompt =
-          `# Portfolio Attribution Report\n\n` +
-          `## Instructions\n` +
-          `You are a **financial analyst**. Analyze the portfolio data below.\n\n` +
-          `- Sorted by \`${performanceCol}\`\n` +
-          `- Tags: \`Top Performer N\`, \`Underperformer N\`, \`High Investment N\`, \`Low Investment N\`\n\n` +
-          `## Data\n` +
-          '```csv\n' + this.cleanedCsv + '\n```\n\n' +
-          `## JSON Output\n` +
-          '```json\n' + jsonString + '\n```\n\n' +
-          `## Prompt for LLM\n\n` +
-          `Analyze the JSON data above and highlight key allocation and selection effects. Summarize insights based on the data.`;
-
-        const html = marked.parse(this.prompt) as string;
-        this.renderedPrompt = this.sanitizer.bypassSecurityTrustHtml(html);
-      } catch (err) {
-        this.prompt = 'Error parsing input.';
-      } finally {
-        this.isGenerating = false;
-      }
-    }, 200); // simulate processing delay
-  }
-
-  assignRankTags(rows: any[], column: string, label: string, top = true, count = 3): Map<any, string[]> {
-    const tagMap = new Map<any, string[]>();
-
-    const valueMap = rows.map(row => ({
-      row,
-      val: parseFloat(row[column]) || 0
-    }));
-
-    valueMap.sort((a, b) => top ? b.val - a.val : a.val - b.val);
-
-    const rankedValues: number[] = [];
-    for (const entry of valueMap) {
-      if (!rankedValues.includes(entry.val)) {
-        rankedValues.push(entry.val);
-      }
-      if (rankedValues.length === count) break;
-    }
-
-    valueMap.forEach(({ row, val }) => {
-      const rankIndex = rankedValues.indexOf(val);
-      if (rankIndex !== -1) {
-        const tag = `${label} ${rankIndex + 1}`;
-        const current = tagMap.get(row) || [];
-        tagMap.set(row, [...current, tag]);
-      }
-    });
-
-    return tagMap;
-  }
-
-  downloadPromptAsWord() {
-    const htmlContent = marked.parse(this.prompt) as string;
-
-    const wordHtml = `
-      <html xmlns:o='urn:schemas-microsoft-com:office:office' 
-            xmlns:w='urn:schemas-microsoft-com:office:word' 
-            xmlns='http://www.w3.org/TR/REC-html40'>
-      <head><meta charset='utf-8'></head>
-      <body>${htmlContent}</body>
-      </html>
-    `;
-
-    const blob = new Blob([wordHtml], {
-      type: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
-    });
-
-    const url = window.URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `${this.fileName || 'LLM_Report'}.doc`;
-    a.click();
-    window.URL.revokeObjectURL(url);
-  }
-}
-````
-
----
-
-### ✅ `app.component.html`
-
-```html
-<div class="input-section">
-  <label><strong>Paste CSV Table:</strong></label>
-  <textarea
-    rows="10"
-    cols="80"
-    [(ngModel)]="rawInput"
-    placeholder="Paste your CSV data here..."
-    [disabled]="isGenerating"
-  ></textarea>
-
-  <br /><br />
-  <label><strong>Output File Name:</strong></label>
-  <input
-    type="text"
-    [(ngModel)]="fileName"
-    placeholder="Enter filename..."
-    [disabled]="isGenerating"
-  />
-
-  <br /><br />
-  <button (click)="generatePrompt()" [disabled]="isGenerating">Generate Prompt</button>
-  <button *ngIf="prompt" (click)="downloadPromptAsWord()" [disabled]="isGenerating">Download as Word</button>
-</div>
-
-<div *ngIf="renderedPrompt" [innerHTML]="renderedPrompt" class="rendered-markdown"></div>
+const blob = new Blob([wordHtml], {
+  type: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+});
 ```
 
 ---
 
-### ✅ `app.component.css` (Optional)
+### ✅ TL;DR
 
-```css
-.input-section {
-  font-family: Arial, sans-serif;
-  margin-bottom: 20px;
-}
-
-textarea,
-input[type="text"] {
-  width: 100%;
-  margin-top: 6px;
-  margin-bottom: 12px;
-  padding: 10px;
-  font-family: monospace;
-  border-radius: 4px;
-  border: 1px solid #ccc;
-}
-
-button {
-  margin-right: 10px;
-  padding: 8px 16px;
-  font-weight: bold;
-}
-
-.rendered-markdown {
-  background-color: #f8f8f8;
-  padding: 20px;
-  border-radius: 6px;
-  margin-top: 20px;
-  font-family: 'Segoe UI', sans-serif;
-}
-
-.rendered-markdown pre {
-  background-color: #222;
-  color: #f8f8f8;
-  padding: 12px;
-  border-radius: 4px;
-  overflow-x: auto;
-}
-```
+* ✅ Yes, you can use **normal strings**
+* ✅ Just wrap each line in `<p>line</p>` to make Word understand them
+* ❌ Don’t use raw plain text in `.doc` blobs — it won’t render properly in Word
 
 ---
 
-### ✅ That’s it!
-
-You now have a complete, user-friendly Angular component for:
-
-* Preprocessing CSV input
-* Annotating and sorting financial data
-* Building an LLM-ready Markdown prompt
-* Downloading it as a Word document
-* Supporting tied scores and dynamic file naming
-
-Let me know if you'd like to:
-
-* Upload a CSV file directly
-* Add backend integration to send this to an API (e.g., your Ollama wrapper)
-* Preview a live word-style document in browser
-
+Let me know if you want to support both **Markdown** and **plain text (.txt)** downloads side by side!
