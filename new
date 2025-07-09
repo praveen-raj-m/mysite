@@ -1,70 +1,126 @@
-Thanks — this error typically occurs if you declare the `role` field as a literal type incorrectly. Let's fix it properly.
+Perfect questions — let's fix all 3 issues clearly and cleanly:
 
 ---
 
-### ✅ The Problem
+## ✅ 1. **Fix: Copy to Clipboard Not Working**
 
-You're probably doing this:
-
-```ts
-chatHistory: { role: 'user' | 'assistant'; content: string }[] = [];
-```
-
-But TypeScript needs to **treat role as a string literal**, not just any string.
-
-When you define a message like this:
+Ensure you have this method in `app.component.ts`:
 
 ```ts
-const role = 'user'; // ← this is inferred as string (not literal 'user')
-```
-
-...and try to assign it to `role: 'user' | 'assistant'`, TypeScript complains:
-
-> Type `string` is not assignable to `'user' | 'assistant'`.
-
----
-
-### ✅ The Fix: Use a Type Assertion (or define it as literal)
-
-```ts
-const userMsg = { role: 'user' as const, content: message };
-```
-
-OR better: use a clean interface like this:
-
----
-
-### ✅ Best Practice (with Interface)
-
-#### 1. At the top of your `app.component.ts`:
-
-```ts
-type ChatRole = 'user' | 'assistant';
-
-interface ChatMessage {
-  role: ChatRole;
-  content: string;
+copyToClipboard(text: string) {
+  navigator.clipboard.writeText(text).then(() => {
+    console.log('Copied to clipboard!');
+  }).catch(err => {
+    console.error('Failed to copy:', err);
+  });
 }
 ```
 
-#### 2. Then declare:
+Then in `app.component.html`, each message should include:
 
-```ts
-chatHistory: ChatMessage[] = [];
+```html
+<button (click)="copyToClipboard(msg.content)">Copy</button>
 ```
 
-#### 3. Now your message creation is valid:
-
-```ts
-const userMsg: ChatMessage = { role: 'user', content: message };
-const placeholder: ChatMessage = { role: 'assistant', content: 'Generating...' };
-
-this.chatHistory.push(userMsg);
-this.chatHistory.push(placeholder);
-```
-
-✅ No TypeScript error, and you get type safety.
+✅ That will copy the full response to clipboard.
 
 ---
 
-Let me know if you'd like this typed model extracted into a separate file for reuse.
+## ✅ 2. **Fix: Clear Chat History Not Removing Old Messages**
+
+You probably updated `chatHistory` but didn't clear the DOM visually.
+
+Make sure you're clearing both `chatHistory` **and** `chatInput`:
+
+```ts
+clearChatHistory() {
+  this.chatHistory = [];
+  this.chatInput = '';
+}
+```
+
+Also, make sure this `chat-window` area in your HTML is wrapped properly with `*ngFor` on `chatHistory`:
+
+```html
+<div class="chat-window">
+  <div *ngFor="let msg of chatHistory" [ngClass]="msg.role">
+    <div class="chat-bubble">
+      <pre>{{ msg.content }}</pre>
+      <button (click)="copyToClipboard(msg.content)">Copy</button>
+    </div>
+  </div>
+</div>
+```
+
+✅ Now clearing the array removes all messages from view.
+
+---
+
+## ✅ 3. **Fix: Ollama Not Remembering Previous Messages**
+
+This is the **most important**: You're likely sending only the latest prompt.
+
+Instead, you need to send **all messages** (user + assistant) to the backend in correct format, so the model remembers context.
+
+---
+
+### ✅ Update `sendChatMessage()` to send full context:
+
+```ts
+sendChatMessage() {
+  const message = this.chatInput.trim();
+  if (!message) return;
+
+  const userMsg = { role: 'user' as const, content: message };
+  this.chatHistory.push(userMsg);
+  this.chatInput = '';
+
+  const placeholder = { role: 'assistant' as const, content: 'Generating...' };
+  this.chatHistory.push(placeholder);
+
+  // ⚠️ Send entire chat history as context
+  const ollamaMessages = this.chatHistory
+    .filter(msg => msg.content !== 'Generating...') // exclude placeholder
+    .map(msg => ({ role: msg.role, content: msg.content }));
+
+  fetch('http://localhost:11434/api/chat', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json'
+    },
+    body: JSON.stringify({
+      model: this.selectedModel,
+      messages: ollamaMessages
+    })
+  })
+    .then(res => res.json())
+    .then(data => {
+      const reply = data.message?.content || '[No response from model]';
+      placeholder.content = reply;
+    })
+    .catch(err => {
+      placeholder.content = '[Error connecting to Ollama]';
+      console.error(err);
+    });
+}
+```
+
+✅ This ensures Ollama gets the **entire conversation** every time, so it can remember previous turns.
+
+---
+
+## 🧠 Summary of Changes Needed
+
+| Issue               | Fix                                                      |
+| ------------------- | -------------------------------------------------------- |
+| ✅ Copy to clipboard | Use `navigator.clipboard.writeText(...)`                 |
+| ✅ Clear chat fully  | Reset `chatHistory = []`                                 |
+| ✅ Remember context  | Pass **entire** chat history (`messages`) to `/api/chat` |
+
+---
+
+Let me know if you'd like:
+
+* Streaming support (`stream: true`)
+* Saving chat history to localStorage
+* Auto-scroll to last message after every response
