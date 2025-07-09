@@ -40,3 +40,85 @@ Instructions:
    - If performance was negative, focus on causes and possible areas for improvement.
 
 Here is the JSON data:
+
+
+import { Component } from '@angular/core';
+
+@Component({
+  selector: 'app-root',
+  templateUrl: './app.component.html',
+  styleUrls: ['./app.component.css'],
+})
+export class AppComponent {
+  rawInput: string = '';
+  prompt: string = '';
+
+  // Define headers explicitly (in correct order)
+  yourHeaders: string[] = [
+    'Industry Code',
+    'Portfolio Weight',
+    'Benchmark Weight',
+    'Portfolio Return',
+    'Benchmark Return',
+    'Wgtd Contribution',
+    'Selection Effect'
+  ];
+
+  generatePrompt() {
+    try {
+      const lines = this.rawInput.trim().split('\n');
+      if (lines.length < 2) {
+        this.prompt = 'Invalid table.';
+        return;
+      }
+
+      // Skip the first line entirely
+      const dataLines = lines.slice(1);
+
+      // Map lines to row objects using your defined headers
+      const dataRows = dataLines.map(line => {
+        const values = line.split(',').map(v => v.trim());
+        const row: any = {};
+        this.yourHeaders.forEach((header, index) => {
+          row[header] = values[index] || '';
+        });
+        return row;
+      });
+
+      // Extract and remove last row (assumed to be total)
+      const totalRow = dataRows.pop()!;
+      const lastColumn = this.yourHeaders[this.yourHeaders.length - 1];
+
+      // Sort by last column
+      dataRows.sort((a, b) => {
+        const aVal = parseFloat(a[lastColumn]) || 0;
+        const bVal = parseFloat(b[lastColumn]) || 0;
+        return bVal - aVal; // Descending
+      });
+
+      // Tag top 3 and bottom 3
+      dataRows.forEach((row, index, arr) => {
+        if (index < 3) row['Tag'] = 'Top Performer';
+        else if (index >= arr.length - 3) row['Tag'] = 'Underperformer';
+      });
+
+      // Create final total object
+      const totalData: any = {};
+      this.yourHeaders.slice(1).forEach(header => {
+        totalData[header] = totalRow[header] || '';
+      });
+
+      const finalJson = [...dataRows, { Total: totalData }];
+      const jsonString = JSON.stringify(finalJson, null, 2);
+
+      this.prompt =
+        `You are a financial analyst. Analyze the following portfolio attribution data.\n\n` +
+        `The table is sorted by the last column ("${lastColumn}").\n` +
+        `The top 3 sectors are marked as "Top Performer", the bottom 3 as "Underperformer".\n` +
+        `The last item in the list is the Total row, showing column-wise totals.\n\n` +
+        `Data:\n${jsonString}`;
+    } catch (err) {
+      this.prompt = 'Error parsing input.';
+    }
+  }
+}
