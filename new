@@ -1,59 +1,158 @@
-Yes, absolutely! ✅ You can add **normal plain strings** (not HTML) to the file content — **but it depends on the file format you're generating**.
+<!-- app.component.html -->
+<div class="tab-bar">
+  <button [class.active]="activeTab === 'generate'" (click)="activeTab = 'generate'">Generate</button>
+  <button [class.active]="activeTab === 'chat'" (click)="activeTab = 'chat'">Chat</button>
+</div>
 
----
+<!-- GENERATE TAB -->
+<div *ngIf="activeTab === 'generate'" class="tab-content">
+  <div class="input-section">
+    <textarea
+      rows="10"
+      cols="80"
+      [(ngModel)]="rawInput"
+      placeholder="Paste your CSV data here..."
+      [disabled]="isGenerating"
+    ></textarea>
 
-### ⚠️ If you're generating a `.doc` (Word-compatible) file:
+    <input
+      type="text"
+      [(ngModel)]="fileName"
+      placeholder="Enter file name..."
+      [disabled]="isGenerating"
+    />
 
-Word expects **HTML**, so strings should be inside tags like `<p>`, `<h1>`, etc.
+    <button (click)="generatePrompt()" [disabled]="isGenerating">Generate Prompt</button>
+    <button *ngIf="prompt" (click)="downloadPromptAsWord()" [disabled]="isGenerating">Download</button>
+  </div>
 
-But you **can still insert normal strings** — just wrap them in `<p>` or convert them to HTML first.
+  <div *ngIf="renderedPrompt" [innerHTML]="renderedPrompt" class="rendered-markdown"></div>
+</div>
 
----
+<!-- CHAT TAB -->
+<div *ngIf="activeTab === 'chat'" class="chat-tab">
+  <div class="chat-header">
+    <label for="model-select"><strong>Model:</strong></label>
+    <select id="model-select" [(ngModel)]="selectedModel">
+      <option *ngFor="let model of models" [value]="model">{{ model }}</option>
+    </select>
+    <button (click)="clearChatHistory()">Clear Chat</button>
+  </div>
 
-### ✅ Example: Add Plain Strings to Word `.doc` Blob
+  <div class="chat-window">
+    <div *ngFor="let msg of chatHistory" [ngClass]="msg.role">
+      <div class="chat-bubble">
+        <pre>{{ msg.content }}</pre>
+        <button (click)="copyToClipboard(msg.content)">Copy</button>
+      </div>
+    </div>
+  </div>
 
-```ts
-const extraText = `
-Summary of the Report:
-Generated using internal tool for LLM formatting.
+  <div class="chat-input">
+    <textarea [(ngModel)]="chatInput" placeholder="Ask Ollama..."></textarea>
+    <button (click)="sendChatMessage()">Send</button>
+  </div>
+</div>
 
-Please verify totals and attribution tags manually before sending to analysts.
-`;
+<!-- Add to app.component.css -->
+<style>
+.tab-bar button {
+  padding: 10px;
+  margin-right: 5px;
+}
 
-const htmlifiedExtraText = extraText
-  .split('\n')
-  .map(line => `<p>${line}</p>`)
-  .join('');
+.tab-bar .active {
+  font-weight: bold;
+  background-color: #ddd;
+}
 
-// Combine with HTML prompt content
-const htmlContent = marked.parse(this.prompt) as string;
+.chat-tab {
+  display: flex;
+  flex-direction: column;
+  height: 80vh;
+}
 
-const wordHtml = `
-  <html xmlns:o='urn:schemas-microsoft-com:office:office' 
-        xmlns:w='urn:schemas-microsoft-com:office:word' 
-        xmlns='http://www.w3.org/TR/REC-html40'>
-  <head><meta charset='utf-8'></head>
-  <body>
-    ${htmlifiedExtraText}
-    <hr/>
-    ${htmlContent}
-  </body>
-  </html>
-`;
+.chat-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 10px;
+  background: #eaeaea;
+}
 
-const blob = new Blob([wordHtml], {
-  type: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
-});
-```
+.chat-header select {
+  margin: 0 10px;
+  padding: 4px;
+}
 
----
+.chat-window {
+  flex-grow: 1;
+  overflow-y: auto;
+  padding: 1rem;
+  background: #f4f4f4;
+}
 
-### ✅ TL;DR
+.chat-window .user {
+  text-align: right;
+}
 
-* ✅ Yes, you can use **normal strings**
-* ✅ Just wrap each line in `<p>line</p>` to make Word understand them
-* ❌ Don’t use raw plain text in `.doc` blobs — it won’t render properly in Word
+.chat-window .assistant {
+  text-align: left;
+}
 
----
+.chat-bubble {
+  display: inline-block;
+  padding: 10px;
+  margin: 5px;
+  background: #e1e1ff;
+  border-radius: 10px;
+  max-width: 70%;
+  position: relative;
+}
 
-Let me know if you want to support both **Markdown** and **plain text (.txt)** downloads side by side!
+.chat-input {
+  display: flex;
+  padding: 10px;
+  background: #fff;
+  border-top: 1px solid #ccc;
+}
+
+.chat-input textarea {
+  flex-grow: 1;
+  padding: 10px;
+  resize: none;
+}
+
+.chat-input button {
+  margin-left: 10px;
+}
+</style>
+
+
+
+
+models: string[] = ['llama3', 'gemma', 'mistral']; // or dynamically load
+selectedModel: string = 'llama3';
+chatInput: string = '';
+chatHistory: { role: 'user' | 'assistant', content: string }[] = [];
+
+sendChatMessage() {
+  if (!this.chatInput.trim()) return;
+  const userMessage = this.chatInput.trim();
+  this.chatHistory.push({ role: 'user', content: userMessage });
+
+  // Simulate LLM response — replace this with actual fetch call to Ollama
+  const response = `You asked: "${userMessage}" with model "${this.selectedModel}". Here's a placeholder response.`;
+  setTimeout(() => {
+    this.chatHistory.push({ role: 'assistant', content: response });
+    this.chatInput = '';
+  }, 500);
+}
+
+clearChatHistory() {
+  this.chatHistory = [];
+}
+
+copyToClipboard(text: string) {
+  navigator.clipboard.writeText(text);
+}
