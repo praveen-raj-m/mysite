@@ -1,88 +1,55 @@
-Yes — you can download the prompt as a **Word-compatible `.docx` file**, but it requires a little more than just changing the file extension. Since Word doesn't natively parse Markdown, we need to either:
+import { Component } from '@angular/core';
+import { DomSanitizer, SafeHtml } from '@angular/platform-browser';
+import { marked } from 'marked';
 
----
+@Component({
+  selector: 'app-root',
+  templateUrl: './app.component.html',
+  styleUrls: ['./app.component.css'],
+})
+export class AppComponent {
+  rawInput: string = '';
+  prompt: string = '';
+  renderedPrompt!: SafeHtml;
 
-### ✅ Option 1: Simple Word File (No Styling)
+  // Define your headers here
+  yourHeaders: string[] = [
+    'Industry Code',
+    'Portfolio Weight',
+    'Benchmark Weight',
+    'Portfolio Return',
+    'Benchmark Return',
+    'Wgtd Contribution',
+    'Selection Effect'
+  ];
 
-Just save the Markdown as a `.doc` or `.docx` **text file**. Word will open it, but it won't interpret formatting (like `**bold**` or `# heading`).
+  constructor(private sanitizer: DomSanitizer) {}
 
-#### 🔧 Minimal code change:
+  generatePrompt() {
+    try {
+      const lines = this.rawInput.trim().split('\n');
+      if (lines.length < 2) {
+        this.prompt = 'Invalid table.';
+        return;
+      }
 
-```ts
-downloadPromptAsWord() {
-  const blob = new Blob([this.prompt], { type: 'application/msword' });
-  const url = window.URL.createObjectURL(blob);
+      const headers = this.yourHeaders;
+      const dataLines = lines.slice(1); // Skip CSV's first row
 
-  const a = document.createElement('a');
-  a.href = url;
-  a.download = 'prompt.doc';
-  a.click();
+      const dataRows = dataLines.map(line => {
+        const values = line.split(',').map(v => v.trim());
+        const row: any = {};
+        headers.forEach((header, index) => {
+          row[header] = values[index] || '';
+        });
+        return row;
+      });
 
-  window.URL.revokeObjectURL(url);
-}
-```
+      const totalRow = dataRows.pop()!;
+      const performanceCol = headers[headers.length - 1];
+      const investmentCol = 'Portfolio Weight';
 
-✅ Works — but the Markdown won't look styled in Word. It'll show as plain text.
-
----
-
-### ✅ Option 2: Convert Markdown → HTML → Word (with real formatting)
-
-If you want the **Markdown fully styled in Word (bold, heading, JSON in monospace, etc.)**, here's how to do it:
-
-#### 🧠 Approach:
-
-1. Use `marked.parse()` to convert Markdown → HTML
-2. Wrap HTML in a basic Word-compatible document template
-3. Save it as `.doc` or `.docx`
-
-#### ✅ Add This Method:
-
-```ts
-downloadPromptAsWord() {
-  const htmlContent = marked.parse(this.prompt) as string;
-
-  const wordHtml = `
-    <html xmlns:o='urn:schemas-microsoft-com:office:office' 
-          xmlns:w='urn:schemas-microsoft-com:office:word' 
-          xmlns='http://www.w3.org/TR/REC-html40'>
-    <head><meta charset='utf-8'></head>
-    <body>${htmlContent}</body>
-    </html>
-  `;
-
-  const blob = new Blob([wordHtml], {
-    type: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
-  });
-
-  const url = window.URL.createObjectURL(blob);
-  const a = document.createElement('a');
-  a.href = url;
-  a.download = 'prompt.doc';
-  a.click();
-  window.URL.revokeObjectURL(url);
-}
-```
-
----
-
-### ✅ Add Button in HTML
-
-```html
-<button (click)="downloadPromptAsWord()" *ngIf="prompt">Download as Word</button>
-```
-
----
-
-### ✅ Result
-
-* The downloaded `.doc` file will open in Word
-* Markdown like `# Heading` or `**bold**` will appear correctly styled
-* JSON blocks will appear as preformatted text
-
----
-
-Let me know if you want the file to:
-
-* Have a custom filename (e.g., with a timestamp)
-* Use a `.docx` wrapper with libraries like `docx.js` (for full-featured Word templates)
+      // === Tagging helpers ===
+      const performanceTags = this.assignRankTags(dataRows, performanceCol, 'Top Performer', true, 3);
+      const underperformanceTags = this.assignRankTags(dataRows, performanceCol, 'Underperformer', false, 3);
+      const hig
