@@ -1,72 +1,3 @@
-Perfect questions — let's fix all 3 issues clearly and cleanly:
-
----
-
-## ✅ 1. **Fix: Copy to Clipboard Not Working**
-
-Ensure you have this method in `app.component.ts`:
-
-```ts
-copyToClipboard(text: string) {
-  navigator.clipboard.writeText(text).then(() => {
-    console.log('Copied to clipboard!');
-  }).catch(err => {
-    console.error('Failed to copy:', err);
-  });
-}
-```
-
-Then in `app.component.html`, each message should include:
-
-```html
-<button (click)="copyToClipboard(msg.content)">Copy</button>
-```
-
-✅ That will copy the full response to clipboard.
-
----
-
-## ✅ 2. **Fix: Clear Chat History Not Removing Old Messages**
-
-You probably updated `chatHistory` but didn't clear the DOM visually.
-
-Make sure you're clearing both `chatHistory` **and** `chatInput`:
-
-```ts
-clearChatHistory() {
-  this.chatHistory = [];
-  this.chatInput = '';
-}
-```
-
-Also, make sure this `chat-window` area in your HTML is wrapped properly with `*ngFor` on `chatHistory`:
-
-```html
-<div class="chat-window">
-  <div *ngFor="let msg of chatHistory" [ngClass]="msg.role">
-    <div class="chat-bubble">
-      <pre>{{ msg.content }}</pre>
-      <button (click)="copyToClipboard(msg.content)">Copy</button>
-    </div>
-  </div>
-</div>
-```
-
-✅ Now clearing the array removes all messages from view.
-
----
-
-## ✅ 3. **Fix: Ollama Not Remembering Previous Messages**
-
-This is the **most important**: You're likely sending only the latest prompt.
-
-Instead, you need to send **all messages** (user + assistant) to the backend in correct format, so the model remembers context.
-
----
-
-### ✅ Update `sendChatMessage()` to send full context:
-
-```ts
 sendChatMessage() {
   const message = this.chatInput.trim();
   if (!message) return;
@@ -75,13 +6,17 @@ sendChatMessage() {
   this.chatHistory.push(userMsg);
   this.chatInput = '';
 
-  const placeholder = { role: 'assistant' as const, content: 'Generating...' };
+  // Add placeholder message for response
+  const placeholder: ChatMessage = { role: 'assistant', content: 'Generating...' };
   this.chatHistory.push(placeholder);
 
-  // ⚠️ Send entire chat history as context
-  const ollamaMessages = this.chatHistory
-    .filter(msg => msg.content !== 'Generating...') // exclude placeholder
-    .map(msg => ({ role: msg.role, content: msg.content }));
+  // Prepare full context: all messages BEFORE placeholder
+  const contextMessages = this.chatHistory
+    .slice(0, -1) // Exclude placeholder
+    .map(m => ({ role: m.role, content: m.content }));
+
+  // Log context for debugging
+  console.log('🔁 Sending full chat context to Ollama:', contextMessages);
 
   fetch('http://localhost:11434/api/chat', {
     method: 'POST',
@@ -90,37 +25,26 @@ sendChatMessage() {
     },
     body: JSON.stringify({
       model: this.selectedModel,
-      messages: ollamaMessages
+      messages: contextMessages
     })
   })
     .then(res => res.json())
     .then(data => {
       const reply = data.message?.content || '[No response from model]';
-      placeholder.content = reply;
+
+      // ✅ Update placeholder with actual response
+      const placeholderIndex = this.chatHistory.indexOf(placeholder);
+      if (placeholderIndex !== -1) {
+        this.chatHistory[placeholderIndex] = {
+          role: 'assistant',
+          content: reply
+        };
+      }
+
+      console.log('✅ Updated chat history:', this.chatHistory);
     })
     .catch(err => {
       placeholder.content = '[Error connecting to Ollama]';
-      console.error(err);
+      console.error('❌ Ollama error:', err);
     });
 }
-```
-
-✅ This ensures Ollama gets the **entire conversation** every time, so it can remember previous turns.
-
----
-
-## 🧠 Summary of Changes Needed
-
-| Issue               | Fix                                                      |
-| ------------------- | -------------------------------------------------------- |
-| ✅ Copy to clipboard | Use `navigator.clipboard.writeText(...)`                 |
-| ✅ Clear chat fully  | Reset `chatHistory = []`                                 |
-| ✅ Remember context  | Pass **entire** chat history (`messages`) to `/api/chat` |
-
----
-
-Let me know if you'd like:
-
-* Streaming support (`stream: true`)
-* Saving chat history to localStorage
-* Auto-scroll to last message after every response
