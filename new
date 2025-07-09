@@ -1,64 +1,42 @@
-generatePrompt() {
-  try {
-    const lines = this.rawInput.trim().split('\n');
-    if (lines.length < 2) {
-      this.prompt = 'Invalid table.';
-      return;
-    }
+You are a senior investment analyst. Analyze the following JSON-formatted Brinson attribution data, which represents monthly performance for an investment portfolio. Your goal is to create a detailed, professional analysis suitable for presentation to clients, portfolio managers, or investment committees.
 
-    const headers = lines[0].split(',').map(h => h.trim());
-    const dataLines = lines.slice(1);
+The data includes:
+- Sector name
+- Portfolio weighted contribution
+- Benchmark weighted contribution
+- Selection effect
+- Allocation effect
+- (Optional) Portfolio average weight
+- (Optional) Benchmark average weight
+- (Optional) Portfolio total return
+- (Optional) Benchmark total return
 
-    const dataRows = dataLines.map(line => {
-      const values = line.split(',').map(v => v.trim());
-      const row: any = {};
-      headers.forEach((header, index) => {
-        row[header] = values[index] || '';
-      });
-      return row;
-    });
+Instructions:
 
-    // Remove and store last row (total)
-    const totalRow = dataRows.pop()!;
+1. For each sector, calculate the Total Management Effect as the sum of Selection Effect and Allocation Effect.
 
-    const lastColumn = headers[headers.length - 1];
+2. Rank all sectors based on Total Management Effect:
+   - Identify and explain the top 3 contributors and bottom 3 detractors.
 
-    // Sort in descending order by the last column
-    dataRows.sort((a, b) => {
-      const aVal = parseFloat(a[lastColumn]) || 0;
-      const bVal = parseFloat(b[lastColumn]) || 0;
-      return bVal - aVal;
-    });
+3. For each sector, analyze:
+   - Whether the performance impact came from selection (security picking), allocation (sector weighting), or both.
+   - If weight data is available, assess whether the sector was overweighted or underweighted relative to the benchmark.
+   - If return data is available, compare the portfolio return vs. benchmark return to infer what drove the selection effect.
 
-    // Tag top 3 and bottom 3
-    dataRows.forEach((row, index, arr) => {
-      if (index < 3) row['Tag'] = 'Top Performer';
-      else if (index >= arr.length - 3) row['Tag'] = 'Underperformer';
-    });
+4. Detect and comment on any unusual patterns or red flags, such as:
+   - Strong selection effect in an underweight sector
+   - Negative selection in an overweighted sector
+   - High active contribution in sectors with low weights
+   - Sectors where allocation worked but selection failed (or vice versa)
 
-    const finalData = [...dataRows];
+5. Summarize the overall performance:
+   - Calculate and report the total active return across all sectors.
+   - Break this down into total selection effect and total allocation effect.
+   - Comment on whether performance was mainly driven by allocation strategy, security selection, or a combination of both.
 
-    // Build a Total object as a separate JSON block
-    const totalData: any = {};
-    headers.slice(1).forEach(header => {
-      totalData[header] = totalRow[header] || '';
-    });
+6. Use a client-facing, professional tone:
+   - Be data-driven, constructive, and objective.
+   - Avoid harsh language or blame. Instead, aim to educate and inform clearly.
+   - If performance was negative, focus on causes and possible areas for improvement.
 
-    // Combine into final object
-    const completeOutput = [
-      ...finalData,
-      { Total: totalData }
-    ];
-
-    const jsonString = JSON.stringify(completeOutput, null, 2);
-
-    this.prompt =
-      `You are a financial analyst. Analyze the following portfolio attribution data.\n\n` +
-      `The table is sorted by the last column ("${lastColumn}").\n` +
-      `The top 3 sectors are marked as "Top Performer", the bottom 3 as "Underperformer".\n` +
-      `The last item in the list is the Total row, showing column-wise totals.\n\n` +
-      `Data:\n${jsonString}`;
-  } catch (err) {
-    this.prompt = 'Error parsing input.';
-  }
-}
+Here is the JSON data:
